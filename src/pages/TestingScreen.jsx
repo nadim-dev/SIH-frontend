@@ -15,6 +15,15 @@ export const TestingScreen = () => {
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState('');
 
+  const getTestPoints = (points = []) => [
+    ...points,
+    ...points.slice(0, 4).reverse().map((tp, index) => ({
+      ...tp,
+      step: points.length + index,
+      description: `Unload to ${tp.description.replace(/\s*\([^)]*\)/, '')}`,
+    })),
+  ];
+
   // 1. Fetch Instrument & Generated Test Points from Backend
   useEffect(() => {
     const fetchInstrument = async () => {
@@ -24,7 +33,7 @@ export const TestingScreen = () => {
 
         // Initialize state for inputs
         const initial = {};
-        res.data.testPoints.forEach((tp) => {
+        getTestPoints(res.data.testPoints).forEach((tp) => {
           initial[tp.step] = { indicated: '', deltaL: '' };
         });
         setReadings(initial);
@@ -78,7 +87,7 @@ export const TestingScreen = () => {
     }
 
     // 2. Map over all test points
-    return instrument.testPoints.map((tp) => {
+    return getTestPoints(instrument.testPoints).map((tp) => {
       const row = readings[tp.step] || { indicated: '', deltaL: '' };
       const hasValues =
         row.indicated !== '' &&
@@ -179,23 +188,23 @@ export const TestingScreen = () => {
     }
   };
 
-  if (loading) return <div style={{ padding: '2rem' }}>Loading Metrology Test Grid...</div>;
-  if (!instrument) return <div style={{ padding: '2rem', color: 'red' }}>{serverError || 'Instrument not found'}</div>;
+  if (loading) return <div className="testing-state">Loading Metrology Test Grid...</div>;
+  if (!instrument) return <div className="testing-state testing-error">{serverError || 'Instrument not found'}</div>;
 
   return (
-    <div style={{ maxWidth: '1100px', margin: '2rem auto', fontFamily: 'system-ui, sans-serif' }}>
-      <h2>Weighing Performance Test (OIML R 76-1)</h2>
-      <p style={{ color: '#666' }}>
+    <main className="testing-page"><section className="testing-shell">
+      <h1 className="testing-title">Weighing Performance Test (OIML R 76-1)</h1>
+      <p className="testing-meta">
         <strong>Scale:</strong> {instrument.manufacturer} ({instrument.modelNumber}) | <strong>Class:</strong> {instrument.accuracyClass} | <strong>Max:</strong> {instrument.max} {instrument.unit} | <strong>e:</strong> {instrument.e} {instrument.unit}
       </p>
 
       {serverError && (
-        <div style={{ padding: '1rem', background: '#FEE2E2', color: '#DC2626', borderRadius: '6px', marginBottom: '1rem' }}>
+        <div className="testing-error-banner">
           {serverError}
         </div>
       )}
 
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1.5rem', textAlign: 'left' }}>
+      <div className="testing-table-wrap"><table className="testing-table">
         <thead>
           <tr style={{ background: '#F3F4F6', borderBottom: '2px solid #D1D5DB' }}>
             <th style={{ padding: '10px' }}>Step</th>
@@ -210,9 +219,12 @@ export const TestingScreen = () => {
           </tr>
         </thead>
         <tbody>
-          {calculatedGrid.map((row) => (
-            <tr key={row.step} style={{ borderBottom: '1px solid #E5E7EB' }}>
-              <td style={{ padding: '10px' }}>{row.step}</td>
+          <tr className="phase-row phase-increasing"><td colSpan="9">▲ PHASE 1: INCREASING LOAD (Loading &amp; Linearity)</td></tr>
+          {calculatedGrid.map((row, index) => (
+            <React.Fragment key={row.step}>
+            {index === instrument.testPoints.length && <tr className="phase-row"><td colSpan="9">▼ PHASE: DECREASING LOAD (Unloading &amp; Hysteresis Recovery)</td></tr>}
+            <tr style={{ borderBottom: '1px solid #E5E7EB' }}>
+              <td style={{ padding: '10px' }}>{index + 1}</td>
               <td style={{ padding: '10px' }}>{row.description}</td>
               <td style={{ padding: '10px', fontWeight: 'bold' }}>{Number(row.load).toFixed(3)}</td>
               <td style={{ padding: '10px' }}>
@@ -222,7 +234,7 @@ export const TestingScreen = () => {
                   placeholder={Number(row.load).toFixed(3)}
                   value={row.indicated}
                   onChange={(e) => handleInputChange(row.step, 'indicated', e.target.value)}
-                  style={{ width: '100px', padding: '6px', borderRadius: '4px', border: '1px solid #ccc' }}
+                  className="grid-input"
                 />
               </td>
               <td style={{ padding: '10px' }}>
@@ -232,7 +244,7 @@ export const TestingScreen = () => {
                   placeholder="e.g. 0.025"
                   value={row.deltaL}
                   onChange={(e) => handleInputChange(row.step, 'deltaL', e.target.value)}
-                  style={{ width: '90px', padding: '6px', borderRadius: '4px', border: '1px solid #ccc' }}
+                  className="grid-input"
                 />
               </td>
               <td style={{ padding: '10px', fontFamily: 'monospace' }}>{row.P}</td>
@@ -240,21 +252,22 @@ export const TestingScreen = () => {
               <td style={{ padding: '10px', color: '#6B7280' }}>±{row.mpe}</td>
               <td style={{ padding: '10px' }}>
                 {row.passed === null ? (
-                  <span style={{ color: '#9CA3AF' }}>Pending</span>
+                    <span className="status pending">PENDING</span>
                 ) : row.passed ? (
-                  <span style={{ background: '#DCFCE7', color: '#166534', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold' }}>PASS</span>
+                    <span className="status pass">● PASS</span>
                 ) : (
-                  <span style={{ background: '#FEE2E2', color: '#991B1B', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold' }}>FAIL</span>
+                    <span className="status fail">FAIL</span>
                 )}
               </td>
             </tr>
+            </React.Fragment>
           ))}
         </tbody>
-      </table>
+      </table></div>
 
-      <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="testing-footer">
         <div>
-          <strong>Overall Test Result: </strong>
+          <strong className="overall-label">✓</strong><strong> Overall Test Result: </strong>
           {allPassed ? (
             <span style={{ color: '#16A34A', fontWeight: 'bold' }}>CONFORMS TO OIML R 76</span>
           ) : (
@@ -264,19 +277,11 @@ export const TestingScreen = () => {
         <button
           onClick={handleSubmitTest}
           disabled={submitting || !allPassed}
-          style={{
-            padding: '10px 24px',
-            background: allPassed ? '#2563EB' : '#9CA3AF',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '6px',
-            cursor: allPassed ? 'pointer' : 'not-allowed',
-            fontWeight: 'bold',
-          }}
+          className="submit-test-button"
         >
           {submitting ? 'Submitting...' : 'Submit Test for Verification'}
         </button>
       </div>
-    </div>
+    </section></main>
   );
 };
