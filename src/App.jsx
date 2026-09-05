@@ -9,6 +9,7 @@ import { LoginPage } from './pages/Login';
 import { TestingPersonDashboard } from './pages/TestingPersonDashbaord';
 import { AdminDashbaord } from './pages/AdminDashboard';
 import { AdminReports } from './pages/AdminReports';
+import { ProjectStatus } from './pages/ProjectStatus';
 import { Supervisordashbaord } from './pages/SupervisorDashboard';
 import DashboardLayout from './layout/dashbaordlayout';
 import { AuthContext } from './context/authContextByValue';
@@ -55,6 +56,10 @@ function ProtectedLayout() {
 
 
 const router=createBrowserRouter([
+  {
+    path:"/",
+    element:<ProjectStatus />
+  },
   {
      path:"/register/instrument",
      element:<InstrumentRegister/>
