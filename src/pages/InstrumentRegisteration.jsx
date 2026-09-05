@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"; // If using react-router-dom
 import { RegisterInstrumentApi } from "../api/instrumentApi";
 import Decimal from "decimal.js";
 import { compressImage } from "../utils/compressImage";
+import "./instrumentRegistrationCompact.css";
 
 const MAX_SOURCE_IMAGE_SIZE = 5 * 1024 * 1024;
 

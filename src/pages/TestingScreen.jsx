@@ -24,6 +24,19 @@ export const TestingScreen = () => {
     })),
   ];
 
+  // Demo readings match the applied load and add no extra load, so every row
+  // stays within the configured MPE limit. They remain editable by the tester.
+  const getDemoReadings = (points = []) => {
+    const demo = {};
+    getTestPoints(points).forEach((tp) => {
+      demo[tp.step] = {
+        indicated: Number(tp.load).toFixed(3),
+        deltaL: '0.000',
+      };
+    });
+    return demo;
+  };
+
   // 1. Fetch Instrument & Generated Test Points from Backend
   useEffect(() => {
     const fetchInstrument = async () => {
@@ -32,11 +45,7 @@ export const TestingScreen = () => {
         setInstrument(res.data);
 
         // Initialize state for inputs
-        const initial = {};
-        getTestPoints(res.data.testPoints).forEach((tp) => {
-          initial[tp.step] = { indicated: '', deltaL: '' };
-        });
-        setReadings(initial);
+        setReadings(getDemoReadings(res.data.testPoints));
       } catch (err) {
         setServerError(err.response?.data?.error || 'Failed to load test configuration.');
       } finally {
@@ -55,6 +64,8 @@ export const TestingScreen = () => {
       },
     }));
   };
+
+  const handleAutoFill = () => setReadings(getDemoReadings(instrument?.testPoints));
 
   // 2. Metrological Live Calculations (OIML R 76-1 Clause A.4.4.3)
   
@@ -180,7 +191,7 @@ export const TestingScreen = () => {
         overallResult: allPassed ? 'PASS' : 'FAIL',
       });
       alert('Test observations submitted successfully!');
-      navigate('/dashboard');
+      navigate(`/testing/${id}/eccentricity`);
     } catch (err) {
       setServerError(err.response?.data?.error || 'Failed to submit test results.');
     } finally {
@@ -193,7 +204,10 @@ export const TestingScreen = () => {
 
   return (
     <main className="testing-page"><section className="testing-shell">
-      <h1 className="testing-title">Weighing Performance Test (OIML R 76-1)</h1>
+      <div className="testing-heading-row">
+        <h1 className="testing-title">Weighing Performance Test (OIML R 76-1)</h1>
+        <button type="button" className="auto-fill-button" onClick={handleAutoFill}>⚡ Auto-Fill Demo Data</button>
+      </div>
       <p className="testing-meta">
         <strong>Scale:</strong> {instrument.manufacturer} ({instrument.modelNumber}) | <strong>Class:</strong> {instrument.accuracyClass} | <strong>Max:</strong> {instrument.max} {instrument.unit} | <strong>e:</strong> {instrument.e} {instrument.unit}
       </p>

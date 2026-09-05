@@ -1,0 +1,23 @@
+.nawi-sidebar{width:240px;padding:14px 16px 22px}
+.nawi-sidebar{position:fixed;inset:0 auto 0 0;z-index:20;overflow-y:auto}
+.nawi-main-column{margin-left:240px;min-height:100vh}
+.nawi-sidebar{background:#0b2340;color:#e8eef7}
+.nawi-brand{height:132px;margin-bottom:22px}
+.nawi-brand img{width:176px;height:116px}
+.nawi-nav{gap:8px}
+.nawi-nav-link{min-height:48px;gap:16px;padding:0 16px;font-size:14px}
+.nawi-nav-link{color:#e8eef7}
+.nawi-nav-link:hover{background:#123a68;color:#e8eef7}
+.nawi-nav-link.active{background:#1557b0;color:#fff}
+.nawi-brand{border-bottom-color:#29415d}
+.nawi-sidebar-footer{border-top-color:#29415d}
+.nawi-nav-link svg{width:19px;height:19px}
+.nawi-sidebar-footer{padding-top:18px}
+.nawi-header{height:78px;padding:0 38px}
+.nawi-government-copy{flex-direction:row;align-items:center;gap:14px;font-size:16px;line-height:1.45}
+.nawi-government-copy img{width:42px;height:48px;object-fit:contain}
+.nawi-government-copy div{display:flex;flex-direction:column}
+.nawi-user-details{font-size:12px}
+.nawi-user-details span{font-size:9px}
+.nawi-content{padding:30px}
+@media(max-width:650px){.nawi-sidebar{width:68px;padding-inline:7px}.nawi-brand{height:94px}.nawi-brand img{width:54px;height:82px}.nawi-main-column{margin-left:68px}.nawi-header{height:64px;padding:0 13px}.nawi-government-copy{display:none}.nawi-content{padding:14px}}
