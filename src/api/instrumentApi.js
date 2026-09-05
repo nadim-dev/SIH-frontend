@@ -22,6 +22,8 @@ export const getPendingApprovalInspectionsApi = () =>
   axiosWithoutCreds.get('/api/instruments/admin/pending-approval');
 export const getApprovedInspectionReportsApi = () =>
   axiosWithoutCreds.get('/api/instruments/admin/approved-reports');
+export const verifyCertificateApi = (number) =>
+  axiosWithoutCreds.get(`/api/instruments/certificate/${encodeURIComponent(number)}`);
 
 export const approveInspectionApi = (instrumentId, payload = {}) =>
   axiosWithoutCreds.post(`/api/instruments/${instrumentId}/approve`, payload);

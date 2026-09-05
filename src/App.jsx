@@ -10,6 +10,7 @@ import { TestingPersonDashboard } from './pages/TestingPersonDashbaord';
 import { AdminDashbaord } from './pages/AdminDashboard';
 import { AdminReports } from './pages/AdminReports';
 import { ProjectStatus } from './pages/ProjectStatus';
+import { CertificateVerification } from './pages/CertificateVerification';
 import { Supervisordashbaord } from './pages/SupervisorDashboard';
 import DashboardLayout from './layout/dashbaordlayout';
 import { AuthContext } from './context/authContextByValue';
@@ -60,6 +61,7 @@ const router=createBrowserRouter([
     path:"/",
     element:<ProjectStatus />
   },
+  { path:"/certificate/:number", element:<CertificateVerification /> },
   {
      path:"/register/instrument",
      element:<InstrumentRegister/>
