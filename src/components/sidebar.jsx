@@ -1,30 +1,24 @@
-import { FileText, FolderOpen, FlaskConical, LogOut, Scale, UserRound, UsersRound, House } from "lucide-react";
+import { ChevronRight, FileText, FolderOpen, FlaskConical, House } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useContext } from "react";
 import nawiIcon from "../assets/nawi-icon.png";
 import { AuthContext } from "../context/authContextByValue";
-import { logoutApi } from "../api/authApi";
-
+import getInitials from "../utils/getInitial";
 const navigation = [
   { label: "Dashboard", to: "/testing-person/dashboard", icon: House },
   { label: "My Tests", to: "/testing-person/tests", icon: FlaskConical },
-  { label: "Instruments", to: "/testing-person/instruments", icon: Scale },
   { label: "Reports", to: "/admin/reports", icon: FileText },
   { label: "Documents", to: "/testing-person/documents", icon: FolderOpen },
-  { label: "Profile", to: "/testing-person/profile", icon: UserRound },
 ];
 
 export function Sidebar() {
-  const { currentUser, setCurrentUser } = useContext(AuthContext);
+  const { currentUser } = useContext(AuthContext);
   const location = useLocation();
   // Route fallback keeps the admin sidebar correct even during auth hydration.
   const isAdmin = ["NAWI_ADMIN", "ADMIN", "ADMINISTRATOR"].includes(String(currentUser?.role || "").toUpperCase()) || location.pathname.startsWith("/admin/");
   const visibleNavigation = navigation
     .filter(({ label }) => !isAdmin || !["My Tests", "Instruments"].includes(label))
     .map((item) => isAdmin && item.label === "Dashboard" ? { ...item, to: "/admin/dashbaord" } : item);
-  const handleLogout = async () => {
-    try { await logoutApi(); } finally { setCurrentUser(null); window.location.assign("/login"); }
-  };
   return (
     <aside className="nawi-sidebar">
       <div className="nawi-brand">
@@ -41,10 +35,14 @@ export function Sidebar() {
       </nav>
 
       <div className="nawi-sidebar-footer">
-        <button type="button" className="nawi-nav-link" onClick={handleLogout}>
-          <LogOut size={16} strokeWidth={1.7} />
-          <span>Logout</span>
-        </button>
+        <NavLink to="/testing-person/profile" className="nawi-sidebar-profile" aria-label="View profile">
+          <div className="nawi-sidebar-profile-avatar">{getInitials(currentUser?.name || "User")}</div>
+          <div className="nawi-sidebar-profile-copy">
+            <strong>{currentUser?.name || "User"}</strong>
+            <span>View Profile</span>
+          </div>
+          <ChevronRight size={21} strokeWidth={2} />
+        </NavLink>
       </div>
     </aside>
   );

@@ -1,10 +1,12 @@
-.registration-page{padding:14px 10px!important}
-.registration-shell{max-width:1120px;padding:20px 28px!important;border-radius:14px!important}
-.page-heading{padding:18px 0!important}
+.registration-page,.registration-page *{font-family:'Inter',sans-serif!important}
+.registration-page{padding:8px 10px!important}
+.registration-shell{max-width:1000px;padding:14px 28px!important;border-radius:14px!important}
+.page-heading{padding:12px 0!important}
 .page-heading h1{font-size:clamp(30px,3.4vw,42px)!important;letter-spacing:-2px!important}
-.page-heading p{margin-top:8px!important;font-size:13px!important}
-.reference-badge{padding:9px 13px;min-width:96px}
-.reference-badge strong{font-size:24px}
+.page-heading p{margin-top:5px!important;font-size:13px!important}
+.reference-badge{padding:8px 13px;min-width:112px;gap:4px}
+.reference-badge strong{font-size:16px;letter-spacing:.7px}
+.reference-badge small{font-size:10px}
 .form-section{padding:15px 0!important}
 .section-title{margin-bottom:10px!important}
 .section-title h2{font-size:16px}
@@ -14,4 +16,6 @@
 .registration-shell label{font-size:10px}
 .upload-box{margin-top:4px;padding:8px 10px}
 .form-footer{padding-top:14px!important}
+.form-footer-actions{display:flex;align-items:center;gap:10px}
+.back-dashboard-button{border:1px solid #2563EB!important;background:#F8FAFC!important;color:#2563EB!important}
 @media(max-width:700px){.registration-shell{padding:16px 14px!important}.page-heading h1{font-size:30px!important}.reference-badge{display:none}}

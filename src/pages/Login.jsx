@@ -29,7 +29,7 @@ export const LoginPage = () => {
       const dashboardByRole = {
         NAWI_ADMIN: "/admin/dashbaord",
         LAB_SUPERVISOR: "/supervisor/dashbaord",
-        TESTING_PERSON: "/testing-person/dashboard",
+        "TESTING OFFICER": "/testing-person/dashboard",
       };
 
       navigate(dashboardByRole[role] || "/login", { replace: true });

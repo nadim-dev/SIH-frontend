@@ -1,7 +1,13 @@
 import { axiosWithCreds,axiosWithoutCreds } from "./axiosInstance";
 
 export const RegisterInstrumentApi=(data)=>
-    axiosWithoutCreds.post("/api/instruments/register",data)
+    axiosWithCreds.post("/api/instruments/register",data)
+
+export const InstrumentEvaluationApi = (applicationId) =>
+    axiosWithCreds.get("/api/instrument/${applicationId}/evaluation");
+
+export const getMyEvaluationsApi = () =>
+    axiosWithCreds.get("/api/instruments/my-evaluations");
 
 export const getInstrumentForTestingApi = (instrumentId) =>
     axiosWithoutCreds.get(`/api/instruments/${instrumentId}`);

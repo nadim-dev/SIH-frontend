@@ -1,3 +1,4 @@
+import { Check, Copy, House, X } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom"; // If using react-router-dom
 import { RegisterInstrumentApi } from "../api/instrumentApi";
@@ -11,21 +12,22 @@ export const InstrumentRegister = () => {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
-    manufacturer: "",
-    model: "",
-    serial: "",
-    instrumentType: "",
+    manufacturer: "Avery Weigh-Tronix",
+    model: "AS-101",
+    serial: "AV-90321",
+    instrumentType: "Bench Scale",
     accuracy: "",
     unit: "kg",
-    maxCapacity: "",
-    minCapacity: "",
-    verificationStep: "",
-    displayStep: "",
+    maxCapacity: "150",
+    minCapacity: "1",
+    verificationStep: "0.05",
+    displayStep: "0.05",
   });
 
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState("");
+  const [successDetails, setSuccessDetails] = useState(null);
 
   const update = ({ target }) => {
     const { name, value } = target;
@@ -73,10 +75,10 @@ const validationState = useMemo(() => {
     if (form.displayStep) {
       const d = new Decimal(form.displayStep);
       if (d.greaterThan(e)) {
-        return { n: n.toString(), error: "Display step (d) cannot be larger than verification step (e).", isValid: false };
+        return { n: n.toString(), error: "Display Scale Interval (d) cannot be larger than verification step (e).", isValid: false };
       }
       if (e.greaterThan(d.times(10))) {
-        return { n: n.toString(), error: "Verification step (e) cannot exceed 10 × d.", isValid: false };
+        return { n: n.toString(), error: "Verification Scale Interval (e) cannot exceed 10 × d.", isValid: false };
       }
     }
 
@@ -168,8 +170,14 @@ const validationState = useMemo(() => {
       const response = await RegisterInstrumentApi(data);
 
       if (response && response.instrumentId) {
-        // Redirect to Observation Grid (Screen 2)
-        navigate(`/testing/${response.instrumentId}`);
+        setSuccessDetails({
+          applicationNumber: response.applicationNumber || response.data?.applicationNumber || "Application number unavailable",
+          instrumentId: response.instrumentId,
+          manufacturer: form.manufacturer,
+          modelNumber: form.model,
+          serialNumber: form.serial,
+          instrumentType: form.instrumentType,
+        });
       }
     } catch (err) {
       setServerError(err.response?.data?.error || err.message || "Failed to register instrument.");
@@ -183,22 +191,17 @@ const validationState = useMemo(() => {
       <div className="ambient-glow glow-one" />
       <div className="ambient-glow glow-two" />
       <section className="registration-shell">
-        <div className="eyebrow">
-          <span className="status-dot" /> OIML R 76 · METROLOGY PORTAL
-        </div>
+        
         <div className="page-heading">
           <div>
-            <h1>
-              New instrument
-              <br />
-              <em>registration</em>
-            </h1>
-            <p>Record the details exactly as shown on the instrument nameplate.</p>
+            <span className="registration-eyebrow">CALIBRATION WORKFLOW <i /></span>
+            <h1 className="registration-title">Instrument Registration</h1>
+            <p className="registration-subtitle">Enter the instrument identification and metrological parameters required for evaluation</p>
           </div>
           <div className="reference-badge">
-            <span>FORM</span>
-            <strong>R-76</strong>
-            <small>REV. 01 / 2026</small>
+            <span>STANDARD</span>
+            <strong>OIML R 76</strong>
+            <small>REV. 01/2026</small>
           </div>
         </div>
 
@@ -306,8 +309,8 @@ const validationState = useMemo(() => {
               {[
                 { name: "maxCapacity", label: "Maximum capacity (Max)", placeholder: "150.000" },
                 { name: "minCapacity", label: "Minimum capacity (Min)", placeholder: "1.000" },
-                { name: "verificationStep", label: "Verification step (e)", placeholder: "0.050" },
-                { name: "displayStep", label: "Display step (d)", placeholder: "0.050" },
+                { name: "verificationStep", label: <>Verification Scale Interval (<span className="lowercase-symbol">e</span>)</>, placeholder: "0.050" },
+                { name: "displayStep", label: <>Display Scale Interval (<span className="lowercase-symbol">d</span>)</>, placeholder: "0.050" },
               ].map(({ name, label, placeholder }) => (
                 <label key={name}>
                   {label}
@@ -330,7 +333,7 @@ const validationState = useMemo(() => {
 
             {/* LIVE OIML TABLE 3 METRICS BADGE */}
             {validationState.n !== null && (
-              <div style={{ marginTop: "1rem", padding: "0.75rem", borderRadius: "6px", background: validationState.error ? "#FEF2F2" : "#F0FDF4", border: `1px solid ${validationState.error ? "#FECACA" : "#DCFCE7"}` }}>
+              <div style={{ marginTop: "0.75rem", padding: "0.6rem 0.75rem", borderRadius: "6px", background: validationState.error ? "#FEF2F2" : "#F0FDF4", border: `1px solid ${validationState.error ? "#FECACA" : "#DCFCE7"}` }}>
                 <span style={{ fontWeight: 600, color: validationState.error ? "#DC2626" : "#16A34A" }}>
                   Calculated Divisions (n = Max/e): {validationState.n.toLocaleString()}
                 </span>
@@ -381,16 +384,35 @@ const validationState = useMemo(() => {
                 ? "✓ Parameters meet OIML R 76 requirements."
                 : "All fields and valid metrological limits are required before submission."}
             </p>
-            <button
+            <div className="form-footer-actions">
+              <button type="button" className="back-dashboard-button" onClick={() => navigate("/testing-person/dashboard")}>Back to Dashboard</button>
+              <button
               type="submit"
               disabled={loading || (form.maxCapacity && !validationState.isValid)}
               style={{ opacity: loading || (form.maxCapacity && !validationState.isValid) ? 0.6 : 1 }}
             >
-              {loading ? "Validating on Server..." : "Validate & initialize test"} <span>→</span>
-            </button>
+              {loading ? "Validating on Server..." : "Register Instrument"} <span>→</span>
+              </button>
+            </div>
           </div>
         </form>
       </section>
+      {successDetails && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-[#0F1B33]/60 p-4">
+          <div className="relative w-full max-w-[500px] rounded-2xl bg-white p-5 text-center shadow-2xl sm:p-6">
+            <button type="button" aria-label="Close" onClick={() => setSuccessDetails(null)} className="absolute right-4 top-4 text-[#475569] hover:text-[#0F1B33]"><X size={20} /></button>
+            <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[#DDF7EC] text-[#10B981]"><Check size={38} strokeWidth={3} /></div>
+            <h2 className="mt-4 text-2xl font-bold leading-tight text-[#0F1B33]">Instrument Registered<br />Successfully!</h2>
+            <p className="mt-2 text-sm leading-5 text-[#475569]">The instrument has been successfully registered<br />and an application has been created.</p>
+            <div className="mt-4 rounded-lg border border-[#BFDBFE] bg-[#EFF6FF] px-4 py-3">
+              <p className="m-0 text-xs font-semibold text-[#475569]">Application Number</p>
+              <div className="mt-1 flex items-center justify-center gap-2"><strong className="text-xl text-[#0F1B33]">{successDetails.applicationNumber}</strong><button type="button" aria-label="Copy application number" onClick={() => navigator.clipboard?.writeText(successDetails.applicationNumber)} className="rounded-md bg-white p-1.5 text-[#2563EB] cursor-pointer shadow-sm"><Copy size={18} /></button></div>
+            </div>
+            <dl className="mt-4 grid grid-cols-[1fr_1.8fr] gap-y-1.5 text-left text-xs"><dt className="text-[#475569]">Manufacturer</dt><dd className="m-0 cursor-pointer font-semibold text-[#0F1B33]">{successDetails.manufacturer}</dd><dt className="text-[#475569]">Model Number</dt><dd className="m-0 font-semibold text-[#0F1B33]">{successDetails.modelNumber}</dd><dt className="text-[#475569]">Serial Number</dt><dd className="m-0 font-semibold text-[#0F1B33]">{successDetails.serialNumber}</dd><dt className="text-[#475569]">Instrument Type</dt><dd className="m-0 font-semibold text-[#0F1B33]">{successDetails.instrumentType}</dd></dl>
+            <div className="mt-4 flex gap-3 border-t border-[#E2E8F0] pt-4"><button type="button" onClick={() => setSuccessDetails(null)} className="flex-1 cursor-pointer rounded-lg border-2 border-[#2563EB] px-3 py-2.5 text-sm font-bold text-[#2563EB] hover:bg-[#EFF6FF]">Close</button><button type="button" onClick={() => navigate("/testing-person/dashboard")} className="inline-flex flex-1 items-center justify-center cursor-pointer gap-2 rounded-lg bg-[#2563EB] px-3 py-2.5 text-sm font-bold text-white hover:bg-[#1E88E5]"><House size={17} />Go to Dashboard</button></div>
+          </div>
+        </div>
+      )}
     </main>
   );
 };
