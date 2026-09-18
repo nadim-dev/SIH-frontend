@@ -14,6 +14,9 @@ import { CertificateVerification } from './pages/CertificateVerification';
 import { Supervisordashbaord } from './pages/SupervisorDashboard';
 import DashboardLayout from './layout/dashbaordlayout';
 import { AuthContext } from './context/authContextByValue';
+import { InstrumentWorkFlow } from './pages/InstrumentWorkflowPage';
+import { InstrumentDocumentation } from './pages/InstrumentDocumentation';
+import { EnviromentalPage } from './pages/CapturingEnviromentCondition';
 
 function useAuth() {
   return useContext(AuthContext);
@@ -84,6 +87,19 @@ const router=createBrowserRouter([
              {
                 path:"/testing-person/instruments",
                 element:<InstrumentRegister />,
+             },
+             {
+              path:"/testing/:applicationId/workflow",
+              element:<InstrumentWorkFlow/>
+
+             },
+             {
+              path:"/testing/:applicationId/document-upload",
+              element:<InstrumentDocumentation/>
+             },
+             {
+               path:"/testing/:applicationId/laboratory-enviroment",
+               element:<EnviromentalPage />
              },
              {
                 path:"/testing/:id",

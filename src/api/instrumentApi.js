@@ -9,6 +9,15 @@ export const InstrumentEvaluationApi = (applicationId) =>
 export const getMyEvaluationsApi = () =>
     axiosWithCreds.get("/api/instruments/my-evaluations");
 
+export const getEvaluationDocumentsApi = (applicationId) =>
+    axiosWithCreds.get(`/api/instruments/${encodeURIComponent(applicationId)}/documents`);
+
+export const uploadEvaluationDocumentApi = (applicationId, data) =>
+    axiosWithCreds.post(`/api/instruments/${encodeURIComponent(applicationId)}/documents`, data);
+
+export const completeEvaluationDocumentsApi = (applicationId) =>
+    axiosWithCreds.post(`/api/instruments/${encodeURIComponent(applicationId)}/documents/complete`);
+
 export const getInstrumentForTestingApi = (instrumentId) =>
     axiosWithoutCreds.get(`/api/instruments/${instrumentId}`);
 
