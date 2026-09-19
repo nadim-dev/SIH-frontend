@@ -16,7 +16,8 @@ import DashboardLayout from './layout/dashbaordlayout';
 import { AuthContext } from './context/authContextByValue';
 import { InstrumentWorkFlow } from './pages/InstrumentWorkflowPage';
 import { InstrumentDocumentation } from './pages/InstrumentDocumentation';
-import { EnviromentalPage } from './pages/CapturingEnviromentCondition';
+import { LaboratoryEnvironment } from './pages/LaboratoryEnvironment';
+import {InstrumentTestPlan} from "./pages/InstrumentTestPlan"
 
 function useAuth() {
   return useContext(AuthContext);
@@ -94,12 +95,20 @@ const router=createBrowserRouter([
 
              },
              {
+              path:"/testing/:applicationId/test-plan",
+              element:<InstrumentTestPlan />
+             },
+             {
+              path:"/testing/:applicationId/test-execution",
+              element:<InstrumentTestExecution />
+             },
+             {
               path:"/testing/:applicationId/document-upload",
               element:<InstrumentDocumentation/>
              },
              {
-               path:"/testing/:applicationId/laboratory-enviroment",
-               element:<EnviromentalPage />
+              path:"/testing/:applicationId/laboratory-enviroment",
+              element:<LaboratoryEnvironment/>
              },
              {
                 path:"/testing/:id",

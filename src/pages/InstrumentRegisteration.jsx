@@ -16,6 +16,9 @@ export const InstrumentRegister = () => {
     model: "AS-101",
     serial: "AV-90321",
     instrumentType: "Bench Scale",
+    technology: "Electronic",
+    indicationType: "Digital",
+    tareDevice: "Yes",
     accuracy: "",
     unit: "kg",
     maxCapacity: "150",
@@ -157,6 +160,9 @@ const validationState = useMemo(() => {
       data.append("instrumentType", form.instrumentType);
       data.append("accuracyClass", form.accuracy.replace("Class ", "")); // Send "III" instead of "Class III"
       data.append("unit", form.unit);
+      data.append("technology", form.technology);
+      data.append("indicationType", form.indicationType);
+      data.append("tareDevice", form.tareDevice);
       data.append("max", form.maxCapacity);
       data.append("min", form.minCapacity);
       data.append("e", form.verificationStep);
@@ -346,10 +352,44 @@ const validationState = useMemo(() => {
             )}
           </div>
 
-          {/* SECTION 3: ATTACH EVIDENCE */}
-          <div className="form-section evidence-section">
+          {/* SECTION 3: INSTRUMENT CONFIGURATION */}
+          <div className="form-section">
             <div className="section-title">
               <span>03</span>
+              <div>
+                <h2>Instrument Configuration</h2>
+                <p>Specify the instrument's operating configuration</p>
+              </div>
+            </div>
+            <div className="field-grid three-col">
+              <label>
+                Technology
+                <select name="technology" value={form.technology} onChange={update}>
+                  <option value="Electronic">Electronic</option>
+                  <option value="Mechanical">Mechanical</option>
+                </select>
+              </label>
+              <label>
+                Indication Type
+                <select name="indicationType" value={form.indicationType} onChange={update}>
+                  <option value="Digital">Digital</option>
+                  <option value="Analog">Analog</option>
+                </select>
+              </label>
+              <label>
+                Tare Device
+                <select name="tareDevice" value={form.tareDevice} onChange={update}>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          {/* SECTION 4: ATTACH EVIDENCE */}
+          <div className="form-section evidence-section">
+            <div className="section-title">
+              <span>04</span>
               <div>
                 <h2>Attach evidence</h2>
                 <p>Upload a clear photo of the nameplate</p>

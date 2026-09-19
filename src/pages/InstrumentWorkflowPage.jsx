@@ -56,6 +56,13 @@ const workflowSteps = [
   },
 ];
 
+const workflowRoutes = {
+  documents: (applicationId) => `/testing/${applicationId}/document-upload`,
+  environment: (applicationId) => `/testing/${applicationId}/laboratory-enviroment`,
+  plan: (applicationId) => `/testing/${applicationId}/test-plan`,
+  testing: (applicationId) => `/testing/${applicationId}/test-execution`,
+};
+
 const getActiveStep = (evaluation) => {
   if (!evaluation) return 1;
   if (evaluation.status === "COMPLETED") return 8;
@@ -196,7 +203,10 @@ export const InstrumentWorkFlow = () => {
                     </span>
                     <button
                       type="button"
-                      onClick={() => navigate("/testing/NAWI-2026-007/laboratory-enviroment")}
+                      onClick={() => {
+                        const getRoute = workflowRoutes[step.key];
+                        if (getRoute) navigate(getRoute(applicationId, instrument._id));
+                      }}
                       className="inline-flex cursor-pointer items-center gap-1 rounded bg-[#2563EB] px-3 py-2 text-xs font-semibold text-white"
                     >
                       Continue <Play size={12} fill="currentColor" />
