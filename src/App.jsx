@@ -18,6 +18,9 @@ import { InstrumentWorkFlow } from './pages/InstrumentWorkflowPage';
 import { InstrumentDocumentation } from './pages/InstrumentDocumentation';
 import { LaboratoryEnvironment } from './pages/LaboratoryEnvironment';
 import {InstrumentTestPlan} from "./pages/InstrumentTestPlan"
+import { InstrumentTestExecution } from './pages/InstrumentTestExecution';
+import GeneralExamination from './pages/Tests/GeneralExamination';
+import { ManageTestingOfficersPage } from './pages/Supervisor/ManageTestingOfficersPage';
 
 function useAuth() {
   return useContext(AuthContext);
@@ -99,6 +102,10 @@ const router=createBrowserRouter([
               element:<InstrumentTestPlan />
              },
              {
+               path:"/testing/:instrumentId/general-examination",
+               element:<GeneralExamination/>
+             },
+             {
               path:"/testing/:applicationId/test-execution",
               element:<InstrumentTestExecution />
              },
@@ -131,9 +138,28 @@ const router=createBrowserRouter([
                 element:<AdminReports/>
              },
              {
-                path:"/supervisor/dashbaord",
-                element:<Supervisordashbaord/>
+              path:"/supervisor/dashbaord",
+              element:<Supervisordashbaord/>
              },
+             {
+              path:"/supervisor/testing-officers",
+              element:<ManageTestingOfficersPage/>
+             },
+             {
+              path:"/supervisor/evaluations",
+              element:<Supervisordashbaord/>
+             },
+             {
+              path:"/supervisor/non-compliance",
+              element:<Supervisordashbaord/>
+             },
+             {
+              path:"/supervisor/reports",
+              element:<Supervisordashbaord/>
+             },
+             {
+
+             }
 
 
           ]

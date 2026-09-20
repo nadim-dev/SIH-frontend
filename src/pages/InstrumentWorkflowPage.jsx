@@ -73,7 +73,7 @@ const getActiveStep = (evaluation) => {
     return 2;
   if (evaluation.status === "ENVIRONMENT_PENDING") return 3;
   if (evaluation.status === "TEST_PLAN_PENDING") return 4;
-  if (evaluation.status === "TESTING") return 5;
+  if (evaluation.status === "TESTING" || evaluation.testingStatus !== "COMPLETED") return 5;
   if (evaluation.status === "COMPLIANCE_EVALUATION") return 6;
   if (
     evaluation.status === "SUPERVISOR_REVIEW" ||
@@ -163,7 +163,9 @@ export const InstrumentWorkFlow = () => {
       <div className="mt-3 space-y-2">
         {workflowSteps.map((step, index) => {
           const number = index + 1;
-          const isComplete = number < activeStep || (activeStep === 8 && number === 8);
+          const complianceFailed = step.key === "compliance" && evaluation.complianceStatus === "NON_COMPLIANT";
+          const testingIncomplete = step.key === "testing" && evaluation.testingStatus !== "COMPLETED";
+          const isComplete = !complianceFailed && !testingIncomplete && (number < activeStep || (activeStep === 8 && number === 8));
           const isActive = number === activeStep && activeStep !== 8;
           const Icon = step.icon;
           return (
@@ -192,7 +194,24 @@ export const InstrumentWorkFlow = () => {
                     {step.copy}
                   </p>
                 </div>
-                {isComplete ? (
+                {testingIncomplete ? (
+                  <>
+                    <span className="rounded bg-[#DBEAFE] px-3 py-1.5 text-[11px] font-semibold text-[#2563EB]">
+                      ● {evaluation.testingStatus === "PENDING" ? "Pending" : "In Progress"}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => navigate(workflowRoutes.testing(applicationId, instrument._id))}
+                      className="inline-flex cursor-pointer items-center gap-1 rounded bg-[#2563EB] px-3 py-2 text-xs font-semibold text-white"
+                    >
+                      Continue <Play size={12} fill="currentColor" />
+                    </button>
+                  </>
+                ) : complianceFailed ? (
+                  <span className="rounded bg-[#FEE2E2] px-3 py-1.5 text-[11px] font-semibold text-[#B91C1C]">
+                    ⚠ Non-compliant
+                  </span>
+                ) : isComplete ? (
                   <span className="rounded bg-[#DCFCE7] px-3 py-1.5 text-[11px] font-semibold text-[#059669]">
                     ✓ Completed
                   </span>

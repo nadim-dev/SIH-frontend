@@ -19,6 +19,7 @@ export const InstrumentRegister = () => {
     technology: "Electronic",
     indicationType: "Digital",
     tareDevice: "Yes",
+    hasPrintingDevice: "No",
     accuracy: "",
     unit: "kg",
     maxCapacity: "150",
@@ -163,6 +164,7 @@ const validationState = useMemo(() => {
       data.append("technology", form.technology);
       data.append("indicationType", form.indicationType);
       data.append("tareDevice", form.tareDevice);
+      data.append("hasPrintingDevice", form.hasPrintingDevice === "Yes");
       data.append("max", form.maxCapacity);
       data.append("min", form.minCapacity);
       data.append("e", form.verificationStep);
@@ -381,6 +383,13 @@ const validationState = useMemo(() => {
                 <select name="tareDevice" value={form.tareDevice} onChange={update}>
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
+                </select>
+              </label>
+              <label>
+                Printer / Data Output
+                <select name="hasPrintingDevice" value={form.hasPrintingDevice} onChange={update}>
+                  <option value="No">No</option>
+                  <option value="Yes">Yes</option>
                 </select>
               </label>
             </div>

@@ -25,11 +25,14 @@ export const LoginPage = () => {
     try {
       const response = await loginApi(form);
       setCurrentUser(response.currentUser);
-      const role = response.currentUser?.role;
+      const role = String(response.currentUser?.role || "")
+        .trim()
+        .toUpperCase()
+        .replace(/\s+/g, "_");
       const dashboardByRole = {
         NAWI_ADMIN: "/admin/dashbaord",
         LAB_SUPERVISOR: "/supervisor/dashbaord",
-        "TESTING OFFICER": "/testing-person/dashboard",
+        TESTING_OFFICER: "/testing-person/dashboard",
       };
 
       navigate(dashboardByRole[role] || "/login", { replace: true });
