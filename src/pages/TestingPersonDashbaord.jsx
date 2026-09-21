@@ -16,10 +16,18 @@ export const TestingPersonDashboard = () => {
       title: `Good morning, ${currentUser.name.split(" ")[0]} 👋`,
       subtitle: "Manage your NAWI testing activities and OIML R 76 evaluations",
     });
-    getMyEvaluationsApi()
-      .then((r) => setEvaluations(r.data || []))
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    const loadEvaluations = async () => {
+      try {
+        const officerId = new URLSearchParams(window.location.search).get("officerId");
+        const response = await getMyEvaluationsApi(officerId);
+        setEvaluations(response.data || []);
+      } catch (error) {
+        console.error("Unable to load evaluations:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadEvaluations();
   }, [currentUser, setHeaderContent]);
   const cards = [
     [
@@ -100,7 +108,7 @@ export const TestingPersonDashboard = () => {
         )}
       </div>
       <section className="mt-5 rounded-lg border border-[#E2E8F0] bg-white p-4 shadow-sm">
-        <div className="flex items-start justify-between gap-4"><div><h2 className="text-lg font-bold text-[#0F1B33]">Instrument Evaluations</h2><p className="text-xs text-[#475569]">View and continue your instrument testing applications</p></div><button type="button" onClick={() => navigate("/register/instrument")} className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-[#2563EB] px-3 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#1E88E5]"><Plus size={14} strokeWidth={2.5} />Register Instrument</button></div>
+        <div className="flex items-start justify-between gap-4"><div><h2 className="text-lg font-bold text-[#0F1B33]">Instrument Evaluations</h2><p className="text-xs text-[#475569]">View and continue your instrument testing applications</p></div>{currentUser?.role !== "LAB SUPERVISOR" && <button type="button" onClick={() => navigate("/register/instrument")} className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-[#2563EB] px-3 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#1E88E5]"><Plus size={14} strokeWidth={2.5} />Register Instrument</button>}</div>
         <div className="mt-3 overflow-x-auto">
           <table className="w-full min-w-[720px] text-left text-[10px]">
             <thead className="bg-[#F1F5F9]">
@@ -173,7 +181,7 @@ export const TestingPersonDashboard = () => {
                       <td className="p-2">
                         <button
                           type="button"
-                          onClick={() => navigate(`/testing/${e.applicationNumber}/workflow`)}
+                          onClick={() => navigate(`/testing/${e.applicationNumber}/workflow${new URLSearchParams(window.location.search).get("officerId") ? `?officerId=${encodeURIComponent(new URLSearchParams(window.location.search).get("officerId"))}` : ""}`)}
                           className={p < 100 ? "inline-flex  cursor-pointer items-center gap-1 rounded bg-[#2563EB] px-2.5 py-1.5 text-white hover:bg-[#1E88E5]" : "inline-flex items-center cursor-pointer gap-1 rounded border border-[#BFDBFE] px-2.5 py-1.5 text-[#2563EB]"}
                         >
                           {p < 100 ? <>Continue <ArrowRight size={12} /></> : <><Eye size={12} />View</>}

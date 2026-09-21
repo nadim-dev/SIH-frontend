@@ -85,7 +85,8 @@ const getActiveStep = (evaluation) => {
 
 export const InstrumentWorkFlow = () => {
   const { applicationId } = useParams();
-  const { setHeaderContent } = useOutletContext();
+  const { setHeaderContent, currentUser } = useOutletContext();
+  const isSupervisor = currentUser?.role === "LAB SUPERVISOR";
   const navigate = useNavigate();
   const [evaluation, setEvaluation] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -95,15 +96,19 @@ export const InstrumentWorkFlow = () => {
       title: "Evaluation Workflow",
       subtitle: "Complete each stage in sequence to finish the evaluation",
     });
-    getMyEvaluationsApi()
-      .then((response) =>
-        setEvaluation(
-          (response.data || []).find(
-            (item) => item.applicationNumber === applicationId,
-          ) || null,
-        ),
-      )
-      .finally(() => setLoading(false));
+    const loadEvaluation = async () => {
+      try {
+        const officerId = new URLSearchParams(window.location.search).get("officerId");
+        const response = await getMyEvaluationsApi(officerId);
+        setEvaluation((response.data || []).find((item) => item.applicationNumber === applicationId) || null);
+      } catch (error) {
+        console.error("Unable to load evaluation workflow:", error);
+        setEvaluation(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadEvaluation();
   }, [applicationId, setHeaderContent]);
 
   const activeStep = useMemo(() => getActiveStep(evaluation), [evaluation]);
@@ -194,18 +199,18 @@ export const InstrumentWorkFlow = () => {
                     {step.copy}
                   </p>
                 </div>
-                {testingIncomplete ? (
+                {testingIncomplete && isActive ? (
                   <>
                     <span className="rounded bg-[#DBEAFE] px-3 py-1.5 text-[11px] font-semibold text-[#2563EB]">
                       ● {evaluation.testingStatus === "PENDING" ? "Pending" : "In Progress"}
                     </span>
-                    <button
+                    {(!isSupervisor || evaluation.testingStatus === "IN_PROGRESS") && <button
                       type="button"
                       onClick={() => navigate(workflowRoutes.testing(applicationId, instrument._id))}
                       className="inline-flex cursor-pointer items-center gap-1 rounded bg-[#2563EB] px-3 py-2 text-xs font-semibold text-white"
                     >
                       Continue <Play size={12} fill="currentColor" />
-                    </button>
+                    </button>}
                   </>
                 ) : complianceFailed ? (
                   <span className="rounded bg-[#FEE2E2] px-3 py-1.5 text-[11px] font-semibold text-[#B91C1C]">
@@ -220,7 +225,7 @@ export const InstrumentWorkFlow = () => {
                     <span className="rounded bg-[#DBEAFE] px-3 py-1.5 text-[11px] font-semibold text-[#2563EB]">
                       ● In Progress
                     </span>
-                    <button
+                    {!isSupervisor && <button
                       type="button"
                       onClick={() => {
                         const getRoute = workflowRoutes[step.key];
@@ -229,7 +234,7 @@ export const InstrumentWorkFlow = () => {
                       className="inline-flex cursor-pointer items-center gap-1 rounded bg-[#2563EB] px-3 py-2 text-xs font-semibold text-white"
                     >
                       Continue <Play size={12} fill="currentColor" />
-                    </button>
+                    </button>}
                   </>
                 ) : (
                   <>

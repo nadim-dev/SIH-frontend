@@ -1,0 +1,128 @@
+import React from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { getRepeatabilityTestConfigApi, submitFullInspectionApi, submitRepeatabilityObservationsApi} from "../../api/instrumentApi";
+
+export const RepeatabilityTestScreen = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [submitting, setSubmitting] = React.useState(false);
+  const [error, setError] = React.useState("");
+  const [config, setConfig] = React.useState(null);
+  const [runs, setRuns] = React.useState([
+    { indicated: "", deltaL: "" },
+    { indicated: "", deltaL: "" },
+    { indicated: "", deltaL: "" },
+  ]);
+
+  React.useEffect(() => {
+    getRepeatabilityTestConfigApi(id)
+      .then((response) => setConfig(response.data?.data || response.data))
+      .catch((err) => setError(err.response?.data?.message || "Failed to load repeatability test."));
+  }, [id]);
+
+  const updateRun = (index, field, value) => {
+    setRuns((current) => current.map((run, runIndex) => runIndex === index ? { ...run, [field]: value } : run));
+  };
+
+  React.useEffect(() => {
+    if (config?.numberOfRuns && config.numberOfRuns !== runs.length) {
+      setRuns(Array.from({ length: config.numberOfRuns }, () => ({ indicated: "" })));
+    }
+  }, [config?.runCount]);
+
+  const calculatedRuns = runs.map((run, index) => {
+    const indicated = Number(run.indicated);
+    const valid = run.indicated !== "" && Number.isFinite(indicated);
+    return { ...run, index, indication: valid ? indicated : null, valid };
+  });
+  const validRuns = calculatedRuns.filter((run) => run.valid);
+  const pValues = validRuns.map((run) => run.indication);
+  const variationRange = pValues.length === runs.length ? Math.max(...pValues) - Math.min(...pValues) : null;
+  const passed = variationRange !== null && variationRange <= Number(config.mpe);
+  const canSubmit = validRuns.length === runs.length;
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    setError("");
+    try {
+      await submitRepeatabilityObservationsApi(id, {
+        testLoad: config.testLoad,
+        runs: runs.map((run) => ({ indication: Number(run.indicated) })),
+      });
+      await submitFullInspectionApi(id);
+      navigate("/testing-person/dashboard");
+    } catch (err) {
+      setError(
+        err.response?.data?.error ||
+          err.response?.data?.message ||
+          "Failed to submit inspection.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+  if (!config) return <main className="repeatability-page"><section className="repeatability-shell">Loading repeatability test...</section></main>;
+
+  return (
+    <main className="repeatability-page">
+      <section className="repeatability-shell">
+        <div className="repeatability-heading">
+          <div>
+            <h1>Repeatability Test </h1>
+            <p>Scale: {config.instrument.instrumentType} | {config.instrument.manufacturer} ({config.instrument.modelNumber}) | Class: {config.instrument.accuracyClass} | Test Load: {config.testLoad} {config.instrument.unit} (80% Max) | e: {config.instrument.e} {config.instrument.unit}</p>
+          </div>
+         
+        </div>
+        
+        <div className="repeatability-table-wrap">
+          <table className="repeatability-table">
+            <thead>
+              <tr>
+                {[ 
+                  "Run #",
+                  "Load Applied (kg)",
+                  "Indication I (kg)",
+                  "Added ΔL (kg)",
+                  "Status",
+                ].map((h) => (
+                  <th key={h}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {calculatedRuns.map((row, index) => (
+                <tr key={index}>
+                  <td>{index + 1}</td>
+                  <td>{config.testLoad}</td>
+                  <td><input className="grid-input" type="number" step="any" value={row.indicated} onChange={(event) => updateRun(index, "indicated", event.target.value)} /></td>
+                  <td>{row.indication === null ? "—" : row.indication.toFixed(4)}</td>
+                  <td>
+                    <span className="status pending">{row.valid ? "RECORDED" : "PENDING"}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        
+        <div className="repeatability-footer">
+          <div>
+            <strong>Variation: </strong>{variationRange === null ? "—" : variationRange.toFixed(4)} {config.instrument.unit}
+            <strong className="ml-4">MPE: </strong>±{config.mpeLimit} {config.instrument.unit}
+            <strong className={`ml-4 ${passed ? "text-green-700" : "text-slate-500"}`}>{passed ? "PASS" : canSubmit ? "FAIL" : "PENDING"}</strong>
+          </div>
+          <button
+            className="proceed-button"
+            disabled={submitting || !canSubmit || !passed}
+            onClick={handleSubmit}
+          >
+            {submitting
+              ? "Submitting..."
+              : "Submit Repeatability Test →"}
+          </button>
+        </div>
+        {error && <div className="testing-error-banner">{error}</div>}
+      </section>
+    </main>
+  );
+};

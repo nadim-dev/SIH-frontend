@@ -1,11 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { useOutletContext, useParams } from "react-router-dom";
-import {
-  getInstrumentForTestingApi,
-  uploadGeneralExaminationPhotoApi,
-  createNonComplianceReportApi,
-  getLatestNonComplianceReportApi,
-} from "../../api/instrumentApi.js";
+import { useNavigate, useOutletContext, useParams } from "react-router-dom";
+import {getInstrumentForTestingApi,uploadGeneralExaminationPhotoApi,createNonComplianceReportApi,getLatestNonComplianceReportApi,submitGeneralExaminationApi} from "../../api/instrumentApi.js";
 import { getInstrumentImage } from "../../utils/instrumentImage.js";
 import { compressImage } from "../../utils/compressImage.js";
 import { Eye } from "lucide-react";
@@ -14,15 +9,6 @@ import NonComplianceReportModal from "../../components/NonComplianceReportModal.
 // ═══════════════════════════════════════════════════════════════
 // DATA
 // ═══════════════════════════════════════════════════════════════
-
-const instrumentData = {
-  id: "INST-2024-00147",
-  model: "XYZ-500",
-  accuracyClass: "III",
-  max: "500 kg",
-  min: "5 kg",
-  e: "0.2 kg",
-};
 
 const requiredPhotos = [
   {
@@ -420,7 +406,7 @@ function SectionCard({
               onToggle={onToggle}
               textValue={textValues[item.key]}
               onTextChange={onTextChange}
-              canAssess={(!item.photoKey && !section.photoKey) || Boolean(photos[item.photoKey || section.photoKey])}
+              canAssess
             />
           </React.Fragment>
         );
@@ -434,6 +420,7 @@ function SectionCard({
 // ═══════════════════════════════════════════════════════════════
 
 export default function GeneralExamination() {
+  const navigate = useNavigate();
   const { instrumentId } = useParams();
   const [instrumentData, setInstrumentData] = useState(null);
   const [loadError, setLoadError] = useState("");
@@ -441,11 +428,12 @@ export default function GeneralExamination() {
   const [textValues, setTextValues] = useState({});
   const [photos, setPhotos] = useState({});
   const [uploadingPhoto, setUploadingPhoto] = useState(null);
-  const [remarks, setRemarks] = useState("");
   const [showNcrForm, setShowNcrForm] = useState(false);
+  const [remarks, setRemarks] = useState("");
   const [ncrEvidence, setNcrEvidence] = useState([]);
   const [ncrSent, setNcrSent] = useState(false);
   const [ncrSubmitted, setNcrSubmitted] = useState(false);
+  const [ncrStatus, setNcrStatus] = useState(null);
   const { setHeaderContent } = useOutletContext();
 
   useEffect(() => {
@@ -463,7 +451,11 @@ export default function GeneralExamination() {
           getInstrumentForTestingApi(instrumentId),
           getLatestNonComplianceReportApi(instrumentId),
         ]);
-        if (ncrResponse?.data) setNcrSubmitted(true);
+        const latestNcr = ncrResponse?.data?.data || ncrResponse?.data || null;
+        if (latestNcr) {
+          setNcrStatus(latestNcr.status);
+          setNcrSubmitted(latestNcr.status === "PENDING");
+        }
         const instrument = response?.data || response;
         setInstrumentData({
           ...instrument,
@@ -508,16 +500,17 @@ export default function GeneralExamination() {
     };
   }, [values]);
 
-  const missingPhotos = useMemo(
-    () => requiredPhotos.filter((p) => !photos[p.key]),
-    [photos],
-  );
-
   const progress = totalItems ? (passedCount / totalItems) * 100 : 0;
 
   const hasFailures = failedCount > 0;
-  const allPassed = passedCount === totalItems && totalItems > 0;
-  const canProceed = allPassed && missingPhotos.length === 0;
+  const applicableItems = sections.flatMap((section) => section.items.filter((item) => {
+    if (item.key === "tareDevice") return instrumentData?.tareDevice === "Yes";
+    if (["softwareId", "softwareSecurity"].includes(item.key)) return instrumentData?.technology === "Electronic";
+    if (item.key === "printingDevice") return instrumentData?.hasPrintingDevice === true;
+    return true;
+  }));
+  const allPassed = applicableItems.length > 0 && applicableItems.every((item) => values[item.key] === "pass");
+  const canProceed = allPassed;
   const canGenerateNCR = hasFailures;
   const failedItems = useMemo(
     () => sections.flatMap((section) => section.items
@@ -541,9 +534,6 @@ export default function GeneralExamination() {
     const section = sections.find((candidate) =>
       candidate.items.some((candidateItem) => candidateItem.key === key),
     );
-    const photoKey = item?.photoKey || section?.photoKey;
-    if (photoKey && !photos[photoKey]) return;
-
     setValues((prev) => {
       if (prev[key] === value) {
         const next = { ...prev };
@@ -582,33 +572,17 @@ export default function GeneralExamination() {
   const handleGenerateNCR = () => {
     setNcrSent(false);
     setShowNcrForm(true);
-    return;
-    const failedItems = sections.flatMap((s) =>
-      s.items.filter((i) => values[i.key] === "fail").map((i) => i.label),
-    );
-
-    const ncrData = {
-      ncrId: "NCR-" + Date.now(),
-      instrument: instrumentData,
-      failedItems,
-      remarks,
-      photos: Object.keys(photos),
-      timestamp: new Date().toISOString(),
-    };
-
-    console.log("NCR Generated:", ncrData);
-    alert(
-      `📋 Non-Compliance Report Generated\n\n` +
-        `NCR ID: ${ncrData.ncrId}\n\n` +
-        `Failed Items:\n${failedItems.map((f, i) => `${i + 1}. ${f}`).join("\n")}\n\n` +
-        `Photos: ${Object.keys(photos).join(", ")}\n\n` +
-        `Sent to Supervisor for review.`,
-    );
   };
 
   const handleProceed = (e) => {
     e.preventDefault();
     if (!canProceed) return;
+
+    const checklist = sections.flatMap((section) => section.items.map((item) => ({ key: item.key, label: item.label, result: values[item.key] === "pass" ? "PASS" : "FAIL", textValue: textValues[item.key] || "" })));
+    submitGeneralExaminationApi(instrumentId, { checklist, photos: Object.fromEntries(Object.entries(photos).map(([key, photo]) => [key, photo.url || photo])), passed: true })
+      .then(() => navigate(`/testing/${instrumentId}/weighingtest`))
+      .catch((error) => setLoadError(error.message || "Failed to save General Examination."));
+    return;
 
     const submission = {
       instrument: instrumentData,
@@ -638,7 +612,7 @@ export default function GeneralExamination() {
           </div>
         )}
 
-        {allPassed && missingPhotos.length > 0 && (
+        {false && allPassed && missingPhotos.length > 0 && (
           <div className="bg-yellow-50 border-l-4 border-yellow-500 text-yellow-800 px-5 py-3 rounded-lg mb-4 text-sm font-medium">
             ⚠️ Missing required photos:{" "}
             {missingPhotos.map((p) => p.label).join(", ")}
@@ -686,7 +660,7 @@ export default function GeneralExamination() {
               <button
                 type="button"
                 onClick={handleGenerateNCR}
-                disabled={!canGenerateNCR || ncrSubmitted}
+                disabled={!canGenerateNCR || ncrStatus === "PENDING"}
                 className={`px-6 py-3 rounded-lg font-semibold text-sm transition-all ${
                   canGenerateNCR
                     ? "bg-red-600 text-white hover:bg-red-700 shadow-md"
@@ -698,7 +672,7 @@ export default function GeneralExamination() {
 
               <button
                 type="submit"
-                disabled={!canProceed || ncrSubmitted}
+                disabled={!canProceed}
                 className={`px-6 py-3 rounded-lg font-semibold text-sm transition-all ${
                   canProceed
                     ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md"
@@ -717,7 +691,7 @@ export default function GeneralExamination() {
           failedItems={failedItems}
           onClose={() => setShowNcrForm(false)}
           onSubmit={createNonComplianceReportApi}
-          onSubmitted={() => { setNcrSubmitted(true); setShowNcrForm(false); }}
+          onSubmitted={() => { setNcrStatus("PENDING"); setNcrSubmitted(true); setShowNcrForm(false); }}
         />
 
         {false && showNcrForm && (

@@ -4,7 +4,7 @@ import './App.css'
 import { InstrumentRegister } from './pages/InstrumentRegisteration';
 import { TestingScreen } from './pages/TestingScreen';
 import { EccentricityTestScreen } from './pages/EccentricityTestScreen';
-import { RepeatabilityTestScreen } from './pages/RepeatabilityTestScreen';
+import { RepeatabilityTestScreen } from './pages/Tests/RepeatabilityTestScreen';
 import { LoginPage } from './pages/Login';
 import { TestingPersonDashboard } from './pages/TestingPersonDashbaord';
 import { AdminDashbaord } from './pages/AdminDashboard';
@@ -21,6 +21,7 @@ import {InstrumentTestPlan} from "./pages/InstrumentTestPlan"
 import { InstrumentTestExecution } from './pages/InstrumentTestExecution';
 import GeneralExamination from './pages/Tests/GeneralExamination';
 import { ManageTestingOfficersPage } from './pages/Supervisor/ManageTestingOfficersPage';
+import { NonComplianceReportPage } from './pages/Supervisor/NonComplianceReportPage';
 
 function useAuth() {
   return useContext(AuthContext);
@@ -118,7 +119,7 @@ const router=createBrowserRouter([
               element:<LaboratoryEnvironment/>
              },
              {
-                path:"/testing/:id",
+                path:"/testing/:id/weighingtest",
                 element:<TestingScreen />,
              },
              {
@@ -148,6 +149,10 @@ const router=createBrowserRouter([
              {
               path:"/supervisor/evaluations",
               element:<Supervisordashbaord/>
+             },
+             {
+              path:"/supervisor/non-compliance",
+              element:<NonComplianceReportPage />
              },
              {
               path:"/supervisor/non-compliance",

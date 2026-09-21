@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import Decimal from 'decimal.js';
-import { getInstrumentForTestingApi, submitInstrumentObservationsApi } from '../api/instrumentApi';
+import { getWeighingTestConfigApi, submitInstrumentObservationsApi, createNonComplianceReportApi } from '../api/instrumentApi';
+import NonComplianceReportModal from '../components/NonComplianceReportModal';
 
 Decimal.set({ precision: 28, rounding: Decimal.ROUND_HALF_UP });
 
 export const TestingScreen = () => {
+  const { setHeaderContent } = useOutletContext();
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -14,6 +16,11 @@ export const TestingScreen = () => {
   const [readings, setReadings] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState('');
+  const [showNcrForm, setShowNcrForm] = useState(false);
+
+  useEffect(() => {
+    setHeaderContent?.({ title: 'Weighing Performance Test', subtitle: 'Perform and record weighing observations for the specified test loads.' });
+  }, [setHeaderContent]);
 
   const getTestPoints = (points = []) => [
     ...points,
@@ -24,28 +31,16 @@ export const TestingScreen = () => {
     })),
   ];
 
-  // Demo readings match the applied load and add no extra load, so every row
-  // stays within the configured MPE limit. They remain editable by the tester.
-  const getDemoReadings = (points = []) => {
-    const demo = {};
-    getTestPoints(points).forEach((tp) => {
-      demo[tp.step] = {
-        indicated: Number(tp.load).toFixed(3),
-        deltaL: '0.000',
-      };
-    });
-    return demo;
-  };
-
   // 1. Fetch Instrument & Generated Test Points from Backend
   useEffect(() => {
     const fetchInstrument = async () => {
       try {
-        const res = await getInstrumentForTestingApi(id);
-        setInstrument(res.data);
+        const res = await getWeighingTestConfigApi(id);
+        const config = res.data;
+        setInstrument({ ...config.instrument, testPoints: config.testPoints });
 
         // Initialize state for inputs
-        setReadings(getDemoReadings(res.data.testPoints));
+        setReadings({});
       } catch (err) {
         setServerError(err.response?.data?.error || 'Failed to load test configuration.');
       } finally {
@@ -65,7 +60,11 @@ export const TestingScreen = () => {
     }));
   };
 
-  const handleAutoFill = () => setReadings(getDemoReadings(instrument?.testPoints));
+  const isRowUnlocked = (index) => {
+    if (index === 0) return true;
+    const previous = calculatedGrid[index - 1];
+    return previous?.indicated !== '' && previous?.deltaL !== '';
+  };
 
   // 2. Metrological Live Calculations (OIML R 76-1 Clause A.4.4.3)
   
@@ -76,26 +75,11 @@ export const TestingScreen = () => {
     const eDec = new Decimal(instrument.e);
     const halfE = eDec.times(0.5);
 
-    // 1. Step 0: Calculate Zero Error E0 Baseline
-    let E0 = null;
-    const zeroReading = readings[0];
-    
-    if (
-      zeroReading &&
-      zeroReading.indicated !== '' &&
-      zeroReading.deltaL !== '' &&
-      !isNaN(zeroReading.indicated) &&
-      !isNaN(zeroReading.deltaL)
-    ) {
-      try {
-        const I0 = new Decimal(zeroReading.indicated);
-        const dL0 = new Decimal(zeroReading.deltaL);
-        const P0 = I0.plus(halfE).minus(dL0);
-        E0 = P0; // E0 = P0 - L0 (where L0 = 0)
-      } catch {
-        E0 = null;
-      }
-    }
+    // The generated sequence starts at minimum load, not a separate zero-load
+    // observation. Therefore do not use the first minimum-load row as E0;
+    // doing so would force its corrected error to 0.0000. The backend stores
+    // the same zero baseline until a dedicated zero-load observation is added.
+    const E0 = new Decimal(0);
 
     // 2. Map over all test points
     return getTestPoints(instrument.testPoints).map((tp) => {
@@ -131,22 +115,8 @@ export const TestingScreen = () => {
         // E = P - L
         const E = P.minus(L);
 
-        // If Step 0 has not been filled yet, do not evaluate Ec for higher steps
-        if (E0 === null && tp.step !== 0) {
-          return {
-            ...tp,
-            indicated: row.indicated,
-            deltaL: row.deltaL,
-            P: P.toFixed(4),
-            E: E.toFixed(4),
-            Ec: 'Waiting for Step 0',
-            passed: null,
-          };
-        }
-
-        // Ec = E - E0 (For Step 0, Ec is simply E0)
-        const currentE0 = E0 !== null ? E0 : E;
-        const Ec = E.minus(currentE0);
+        // Corrected error is the actual error relative to the zero baseline.
+        const Ec = E.minus(E0);
 
         // Pass / Fail Check: |Ec| <= MPE
         const passed = Ec.abs().lessThanOrEqualTo(mpe);
@@ -181,6 +151,15 @@ export const TestingScreen = () => {
     calculatedGrid.length > 0 &&
     calculatedGrid.every((row) => row.passed === true);
 
+  const failedItems = calculatedGrid
+    .filter((row) => row.passed === false)
+    .map((row) => ({
+      key: `weighing-${row.step}`,
+      label: `${row.description} exceeded the MPE limit (Ec ${row.Ec}, MPE ±${row.mpe})`,
+    }));
+
+  const canGenerateNCR = failedItems.length > 0;
+
   // 3. Final Submission to Backend
   const handleSubmitTest = async () => {
     setSubmitting(true);
@@ -191,7 +170,7 @@ export const TestingScreen = () => {
         overallResult: allPassed ? 'PASS' : 'FAIL',
       });
       alert('Test observations submitted successfully!');
-      navigate(`/testing/${id}/eccentricity`);
+      navigate(`/testing/${id}/test-execution`);
     } catch (err) {
       setServerError(err.response?.data?.error || 'Failed to submit test results.');
     } finally {
@@ -203,13 +182,13 @@ export const TestingScreen = () => {
   if (!instrument) return <div className="testing-state testing-error">{serverError || 'Instrument not found'}</div>;
 
   return (
+    <>
     <main className="testing-page"><section className="testing-shell">
       <div className="testing-heading-row">
-        <h1 className="testing-title">Weighing Performance Test (OIML R 76-1)</h1>
-        <button type="button" className="auto-fill-button" onClick={handleAutoFill}>⚡ Auto-Fill Demo Data</button>
+        <h1 className="testing-title text-[1rem]">Weighing Performance Test</h1>  
       </div>
       <p className="testing-meta">
-        <strong>Scale:</strong> {instrument.manufacturer} ({instrument.modelNumber}) | <strong>Class:</strong> {instrument.accuracyClass} | <strong>Max:</strong> {instrument.max} {instrument.unit} | <strong>e:</strong> {instrument.e} {instrument.unit}
+        <strong>Scale:</strong> {instrument.instrumentType} | <strong>Manufacturer:</strong> {instrument.manufacturer} | <strong>Model:</strong> {instrument.modelNumber} | <strong>Class:</strong> {instrument.accuracyClass} | <strong>Max:</strong> {instrument.max} {instrument.unit} | <strong>e:</strong> {instrument.e} {instrument.unit}
       </p>
 
       {serverError && (
@@ -225,7 +204,7 @@ export const TestingScreen = () => {
             <th style={{ padding: '10px' }}>Description</th>
             <th style={{ padding: '10px' }}>Load L ({instrument.unit})</th>
             <th style={{ padding: '10px' }}>Indication I ({instrument.unit})</th>
-            <th style={{ padding: '10px' }}>Added ΔL ({instrument.unit})</th>
+            <th style={{ padding: '10px' }}> ΔL ({instrument.unit})</th>
             <th style={{ padding: '10px' }}>True P</th>
             <th style={{ padding: '10px' }}>Corrected Error Ec</th>
             <th style={{ padding: '10px' }}>MPE Limit</th>
@@ -249,6 +228,7 @@ export const TestingScreen = () => {
                   value={row.indicated}
                   onChange={(e) => handleInputChange(row.step, 'indicated', e.target.value)}
                   className="grid-input"
+                  disabled={!isRowUnlocked(index)}
                 />
               </td>
               <td style={{ padding: '10px' }}>
@@ -259,6 +239,7 @@ export const TestingScreen = () => {
                   value={row.deltaL}
                   onChange={(e) => handleInputChange(row.step, 'deltaL', e.target.value)}
                   className="grid-input"
+                  disabled={!isRowUnlocked(index)}
                 />
               </td>
               <td style={{ padding: '10px', fontFamily: 'monospace' }}>{row.P}</td>
@@ -288,14 +269,34 @@ export const TestingScreen = () => {
             <span style={{ color: '#DC2626', fontWeight: 'bold' }}>DOES NOT CONFORM / PENDING</span>
           )}
         </div>
-        <button
-          onClick={handleSubmitTest}
-          disabled={submitting || !allPassed}
-          className="submit-test-button"
-        >
-          {submitting ? 'Submitting...' : 'Submit Test for Verification'}
-        </button>
+        <div className="flex flex-wrap justify-end gap-3">
+          <button
+            type="button"
+            onClick={() => setShowNcrForm(true)}
+            disabled={!canGenerateNCR}
+            className="cursor-pointer rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+          >
+            Generate Non-Compliance
+          </button>
+          <button
+            onClick={handleSubmitTest}
+            disabled={submitting || !allPassed}
+            className="submit-test-button"
+          >
+            {submitting ? 'Submitting...' : 'Submit Test Results'}
+          </button>
+        </div>
       </div>
     </section></main>
+
+    <NonComplianceReportModal
+      open={showNcrForm}
+      instrumentId={id}
+      failedItems={failedItems}
+      onClose={() => setShowNcrForm(false)}
+      onSubmit={createNonComplianceReportApi}
+      onSubmitted={() => setShowNcrForm(false)}
+    />
+    </>
   );
 };

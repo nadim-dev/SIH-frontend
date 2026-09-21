@@ -39,7 +39,7 @@ const testIconClass = { GENERAL_EXAMINATION: "bg-blue-50 text-blue-600", WEIGHIN
 const testIcons = { GENERAL_EXAMINATION: ClipboardList, WEIGHING_PERFORMANCE: BarChart3, REPEATABILITY: Repeat2, ECCENTRICITY: Target, TARE: Trash2, TEMPERATURE_INFLUENCE: Thermometer, ENDURANCE: Activity, ELECTRONIC_TESTS: Cpu };
 const getTestRoute = (instrumentId, code) => ({
   GENERAL_EXAMINATION: `/testing/${instrumentId}/general-examination`,
-  WEIGHING_PERFORMANCE: `/testing/${instrumentId}`,
+  WEIGHING_PERFORMANCE: `/testing/${instrumentId}/weighingtest`,
   ECCENTRICITY: `/testing/${instrumentId}/eccentricity`,
   REPEATABILITY: `/testing/${instrumentId}/repeatability`,
   TARE: `/testing/${instrumentId}/tare`,
@@ -49,7 +49,8 @@ const getTestRoute = (instrumentId, code) => ({
 }[code] || `/testing/${instrumentId}/test-execution`);
 
 export const InstrumentTestExecution = () => {
-  const { setHeaderContent } = useOutletContext();
+  const { setHeaderContent, currentUser } = useOutletContext();
+  const isSupervisor = currentUser?.role === "LAB SUPERVISOR";
   const { applicationId } = useParams();
   const navigate = useNavigate();
   const [data, setData] = useState(null);
@@ -178,9 +179,9 @@ export const InstrumentTestExecution = () => {
                   key={test.code}
                   type="button"
                   onClick={() =>
-                    isActive && navigate(getTestRoute(data.instrument?._id, test.code))
+                    !isSupervisor && isActive && navigate(getTestRoute(data.instrument?._id, test.code))
                   }
-                  className={`flex w-full items-center gap-2 px-2 py-2.5 text-left text-[11px] ${isActive ? "cursor-pointer hover:bg-blue-50" : "cursor-default"}`}
+                  className={`flex w-full items-center gap-2 px-2 py-2.5 text-left text-[11px] ${!isSupervisor && isActive ? "cursor-pointer hover:bg-blue-50" : "cursor-default"}`}
                 >
                   <span className="w-7 rounded bg-slate-100 px-1 py-1 text-center font-bold text-slate-600">
                     {String(index + 1).padStart(2, "0")}
@@ -217,7 +218,7 @@ export const InstrumentTestExecution = () => {
                         ? "● In Progress"
                         : "○ Pending"}
                   </span>
-                  {isActive && <span title="Start test" className="ml-2 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-blue-600 text-white shadow-sm"><Play size={10} fill="currentColor" /></span>}
+                  {!isSupervisor && isActive && <span title="Start test" className="ml-2 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-blue-600 text-white shadow-sm"><Play size={10} fill="currentColor" /></span>}
                 </button>
               );
             })}
@@ -231,13 +232,13 @@ export const InstrumentTestExecution = () => {
           >
             <ArrowLeft size={13} /> Back to Evaluation
           </button>
-          <button
+          {!isSupervisor && <button
             type="button"
-            onClick={() => navigate(`/testing/${data.instrument?._id}`)}
+            onClick={() => navigate(`/testing/${data.instrument?._id}/weighingtest`)}
             className="inline-flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-[10px] font-bold text-white"
           >
             Open Test <ArrowRight size={13} />
-          </button>
+          </button>}
         </div>
       </section>
     </main>
