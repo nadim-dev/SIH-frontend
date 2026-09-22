@@ -44,3 +44,15 @@
 @media(max-width:600px){.officer-summary-card{height:170px}.officer-summary-card-value{margin-top:7px;font-size:40px}.officer-summary-card p{font-size:11px}}
 /* Repeatability verification uses only Run, Load Applied, and Indication. */
 .repeatability-table th:nth-child(n+4),.repeatability-table td:nth-child(n+4){display:none}
+/* The repeatability result is displayed in the larger summary card above. */
+.repeatability-footer>div:first-child{display:none}
+/* Keep repeatability table headings visible while entering readings. */
+.repeatability-table th{position:sticky;top:0;z-index:2}
+.eccentricity-content{display:flex;flex-direction:column}.eccentricity-content .platform-panel{width:100%}.eccentricity-content .eccentricity-table-wrap{width:100%}
+.eccentricity-content .platform-panel{display:grid;grid-template-columns:280px minmax(420px,1fr);column-gap:28px;align-items:center}.eccentricity-content .platform-panel h2,.eccentricity-content .platform-panel .placement-help{grid-column:1}.eccentricity-content .platform-panel .platform-wrap{grid-column:2;grid-row:1 / span 4}.eccentricity-content .platform-panel .platform-caption,.eccentricity-content .platform-panel .placement-guide{grid-column:1}.eccentricity-content .platform-panel .placement-guide{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.eccentricity-content .platform-panel{padding:14px 18px}.eccentricity-content .platform-panel .platform-wrap{height:240px}.eccentricity-content .platform-panel .platform-caption{margin-top:4px}
+.eccentricity-content .platform-panel{grid-template-columns:360px minmax(360px,1fr);padding:10px 16px}.eccentricity-content .platform-panel h2{font-size:21px;margin:0 0 4px}.eccentricity-content .platform-panel .placement-help{font-size:13px;line-height:1.4;margin:0}.eccentricity-content .platform-panel .platform-wrap{height:190px}.eccentricity-content .platform-grid{transform:scale(.82);transform-origin:center}.eccentricity-content .platform-panel .platform-caption{font-size:11px}
+.eccentricity-shell{padding:14px 18px 10px}.eccentricity-heading{padding-bottom:10px}.eccentricity-heading h1{font-size:24px;margin-bottom:3px}.eccentricity-content{gap:12px;padding:12px 0}.eccentricity-content .platform-panel{padding:8px 12px;column-gap:16px}.eccentricity-table th,.eccentricity-table td{padding:8px 7px}.eccentricity-footer{gap:10px;padding-top:10px}.eccentricity-footer .proceed-button{padding:8px 12px;font-size:12px}.conformance{font-size:12px}
+.eccentricity-page{padding-top:6px}.eccentricity-shell{margin-top:0}
+.eccentricity-content .platform-panel h2{font-size:18px!important;line-height:1.2;text-align:left}.eccentricity-content .platform-panel .placement-help{text-align:left;max-width:320px}.eccentricity-content .platform-panel .platform-caption{text-align:left;margin-left:4px}
+.eccentricity-table .table-input:has(input){padding:0;border:0;background:transparent}.eccentricity-table .table-input input{border:1px solid #dbe2ea;border-radius:5px;padding:7px 8px;outline:none}

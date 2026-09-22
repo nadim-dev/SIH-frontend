@@ -19,6 +19,8 @@ export const InstrumentRegister = () => {
     technology: "Electronic",
     indicationType: "Digital",
     tareDevice: "Yes",
+    tareType: "Subtractive",
+    maximumTare: "0",
     hasPrintingDevice: "No",
     accuracy: "",
     unit: "kg",
@@ -164,6 +166,8 @@ const validationState = useMemo(() => {
       data.append("technology", form.technology);
       data.append("indicationType", form.indicationType);
       data.append("tareDevice", form.tareDevice);
+      data.append("tareType", form.tareType);
+      data.append("maximumTare", form.maximumTare);
       data.append("hasPrintingDevice", form.hasPrintingDevice === "Yes");
       data.append("max", form.maxCapacity);
       data.append("min", form.minCapacity);
@@ -384,6 +388,17 @@ const validationState = useMemo(() => {
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
                 </select>
+              </label>
+              <label>
+                Tare Type
+                <select name="tareType" value={form.tareType} onChange={update} disabled={form.tareDevice === "No"}>
+                  <option value="Subtractive">Subtractive</option>
+                  <option value="Additive">Additive</option>
+                </select>
+              </label>
+              <label>
+                Maximum Tare
+                <input name="maximumTare" type="number" min="0" step="any" value={form.maximumTare} onChange={update} disabled={form.tareDevice === "No"} />
               </label>
               <label>
                 Printer / Data Output

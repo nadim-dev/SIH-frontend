@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { useNavigate, useOutletContext, useParams } from "react-router-dom";
+import { useNavigate, useOutletContext, useParams, useSearchParams } from "react-router-dom";
 import {getInstrumentForTestingApi,uploadGeneralExaminationPhotoApi,createNonComplianceReportApi,getLatestNonComplianceReportApi,submitGeneralExaminationApi} from "../../api/instrumentApi.js";
 import { getInstrumentImage } from "../../utils/instrumentImage.js";
 import { compressImage } from "../../utils/compressImage.js";
@@ -422,6 +422,8 @@ function SectionCard({
 export default function GeneralExamination() {
   const navigate = useNavigate();
   const { instrumentId } = useParams();
+  const [searchParams] = useSearchParams();
+  const applicationNumber = searchParams.get("applicationNumber");
   const [instrumentData, setInstrumentData] = useState(null);
   const [loadError, setLoadError] = useState("");
   const [values, setValues] = useState({});
@@ -580,7 +582,7 @@ export default function GeneralExamination() {
 
     const checklist = sections.flatMap((section) => section.items.map((item) => ({ key: item.key, label: item.label, result: values[item.key] === "pass" ? "PASS" : "FAIL", textValue: textValues[item.key] || "" })));
     submitGeneralExaminationApi(instrumentId, { checklist, photos: Object.fromEntries(Object.entries(photos).map(([key, photo]) => [key, photo.url || photo])), passed: true })
-      .then(() => navigate(`/testing/${instrumentId}/weighingtest`))
+      .then(() => navigate(applicationNumber ? `/testing/${instrumentId}/weighingtest?applicationNumber=${encodeURIComponent(applicationNumber)}` : `/testing/${instrumentId}/weighingtest`))
       .catch((error) => setLoadError(error.message || "Failed to save General Examination."));
     return;
 

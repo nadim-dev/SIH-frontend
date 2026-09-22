@@ -40,6 +40,14 @@ export const getWeighingTestConfigApi = (instrumentId) =>
   axiosWithCreds.get(`/api/instruments/${instrumentId}/weighing-test/config`);
 export const getRepeatabilityTestConfigApi = (instrumentId) =>
   axiosWithCreds.get(`/api/instruments/${instrumentId}/repeatability-test/config`);
+export const getEccentricityTestConfigApi = (instrumentId) =>
+  axiosWithCreds.get(`/api/instruments/${instrumentId}/eccentricity-test/config`);
+export const getTareTestConfigApi = (instrumentId) =>
+  axiosWithCreds.get(`/api/instruments/${instrumentId}/tare-test/config`);
+export const submitTareTestApi = (instrumentId, payload) =>
+  axiosWithoutCreds.post(`/api/instruments/${instrumentId}/submit-tare`, payload);
+export const completeUnimplementedTestApi = (instrumentId, code) =>
+  axiosWithCreds.post(`/api/instruments/${instrumentId}/complete-test/${code}`);
 
 export const submitInstrumentObservationsApi = (instrumentId, payload) =>
     axiosWithoutCreds.post(`/api/instruments/${instrumentId}/submit-observations`, payload);

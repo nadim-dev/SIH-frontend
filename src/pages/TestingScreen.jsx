@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
+import { useParams, useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
 import Decimal from 'decimal.js';
 import { getWeighingTestConfigApi, submitInstrumentObservationsApi, createNonComplianceReportApi } from '../api/instrumentApi';
 import NonComplianceReportModal from '../components/NonComplianceReportModal';
@@ -10,6 +10,8 @@ export const TestingScreen = () => {
   const { setHeaderContent } = useOutletContext();
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const applicationNumber = searchParams.get('applicationNumber');
 
   const [instrument, setInstrument] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -170,7 +172,7 @@ export const TestingScreen = () => {
         overallResult: allPassed ? 'PASS' : 'FAIL',
       });
       alert('Test observations submitted successfully!');
-      navigate(`/testing/${id}/test-execution`);
+      navigate(applicationNumber ? `/testing/${applicationNumber}/test-execution` : `/testing/${id}/test-execution`);
     } catch (err) {
       setServerError(err.response?.data?.error || 'Failed to submit test results.');
     } finally {

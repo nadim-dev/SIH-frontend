@@ -1,17 +1,29 @@
 import React from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { getRepeatabilityTestConfigApi, submitFullInspectionApi, submitRepeatabilityObservationsApi} from "../../api/instrumentApi";
+import { useNavigate, useOutletContext, useParams, useSearchParams } from "react-router-dom";
+import { getRepeatabilityTestConfigApi, submitRepeatabilityObservationsApi, createNonComplianceReportApi} from "../../api/instrumentApi";
+import NonComplianceReportModal from "../../components/NonComplianceReportModal";
 
 export const RepeatabilityTestScreen = () => {
+  const { setHeaderContent } = useOutletContext();
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const applicationNumber = searchParams.get("applicationNumber");
   const navigate = useNavigate();
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState("");
+  const [showNcrForm, setShowNcrForm] = React.useState(false);
+
+  React.useEffect(() => {
+    setHeaderContent?.({
+      title: "Repeatability Test",
+      subtitle: "Verify repeatability at approximately 80% of maximum capacity.",
+    });
+  }, [setHeaderContent]);
   const [config, setConfig] = React.useState(null);
   const [runs, setRuns] = React.useState([
-    { indicated: "", deltaL: "" },
-    { indicated: "", deltaL: "" },
-    { indicated: "", deltaL: "" },
+    { indicated: "" },
+    { indicated: "" },
+    { indicated: "" },
   ]);
 
   React.useEffect(() => {
@@ -40,6 +52,7 @@ export const RepeatabilityTestScreen = () => {
   const variationRange = pValues.length === runs.length ? Math.max(...pValues) - Math.min(...pValues) : null;
   const passed = variationRange !== null && variationRange <= Number(config.mpe);
   const canSubmit = validRuns.length === runs.length;
+  const canGenerateNcr = canSubmit && !passed;
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -49,8 +62,7 @@ export const RepeatabilityTestScreen = () => {
         testLoad: config.testLoad,
         runs: runs.map((run) => ({ indication: Number(run.indicated) })),
       });
-      await submitFullInspectionApi(id);
-      navigate("/testing-person/dashboard");
+      navigate(applicationNumber ? `/testing/${applicationNumber}/test-execution` : `/testing/${id}/test-execution`);
     } catch (err) {
       setError(
         err.response?.data?.error ||
@@ -105,12 +117,28 @@ export const RepeatabilityTestScreen = () => {
           </table>
         </div>
         
+        <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <h2 className="text-base font-bold text-slate-900">Repeatability Summary</h2>
+          <div className="mt-3 grid gap-2 sm:grid-cols-3">
+            <div className="rounded-md border border-slate-200 bg-white p-3"><span className="block text-xs font-semibold text-slate-500">Variation</span><strong className="mt-1 block text-lg text-slate-900">{variationRange === null ? "—" : variationRange.toFixed(4)} {config.instrument.unit}</strong></div>
+            <div className="rounded-md border border-slate-200 bg-white p-3"><span className="block text-xs font-semibold text-slate-500">Applicable MPE</span><strong className="mt-1 block text-lg text-slate-900">±{config.mpe} {config.instrument.unit}</strong></div>
+            <div className="rounded-md border border-slate-200 bg-white p-3"><span className="block text-xs font-semibold text-slate-500">Overall Result</span><strong className={`mt-1 block text-lg ${passed ? "text-green-700" : canSubmit ? "text-red-600" : "text-slate-400"}`}>{passed ? "PASS" : canSubmit ? "FAIL" : "PENDING"}</strong></div>
+          </div>
+        </div>
         <div className="repeatability-footer">
           <div>
             <strong>Variation: </strong>{variationRange === null ? "—" : variationRange.toFixed(4)} {config.instrument.unit}
             <strong className="ml-4">MPE: </strong>±{config.mpeLimit} {config.instrument.unit}
             <strong className={`ml-4 ${passed ? "text-green-700" : "text-slate-500"}`}>{passed ? "PASS" : canSubmit ? "FAIL" : "PENDING"}</strong>
           </div>
+          <button
+            type="button"
+            className="cursor-pointer rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+            disabled={!canGenerateNcr}
+            onClick={() => setShowNcrForm(true)}
+          >
+            Generate Non-Compliance
+          </button>
           <button
             className="proceed-button"
             disabled={submitting || !canSubmit || !passed}
@@ -122,6 +150,14 @@ export const RepeatabilityTestScreen = () => {
           </button>
         </div>
         {error && <div className="testing-error-banner">{error}</div>}
+        <NonComplianceReportModal
+          open={showNcrForm}
+          instrumentId={id}
+          failedItems={[{ key: "repeatability", label: `Repeatability variation exceeded the MPE limit (variation ${variationRange?.toFixed(4)}, MPE ±${config.mpe})` }]}
+          onClose={() => setShowNcrForm(false)}
+          onSubmit={createNonComplianceReportApi}
+          onSubmitted={() => setShowNcrForm(false)}
+        />
       </section>
     </main>
   );

@@ -223,9 +223,9 @@ export const InstrumentWorkFlow = () => {
                 ) : isActive ? (
                   <>
                     <span className="rounded bg-[#DBEAFE] px-3 py-1.5 text-[11px] font-semibold text-[#2563EB]">
-                      ● In Progress
+                      {step.key === "review" ? "Awaiting Review" : "● In Progress"}
                     </span>
-                    {!isSupervisor && <button
+                    {!isSupervisor && step.key !== "review" && <button
                       type="button"
                       onClick={() => {
                         const getRoute = workflowRoutes[step.key];

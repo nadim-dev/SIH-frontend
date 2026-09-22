@@ -19,7 +19,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useNavigate, useOutletContext, useParams } from "react-router-dom";
-import { getTestExecutionDataApi } from "../api/instrumentApi.js";
+import { completeUnimplementedTestApi, getTestExecutionDataApi, submitFullInspectionApi } from "../api/instrumentApi.js";
 
 const categoryClass = {
   EXAMINATION: "bg-blue-100 text-blue-700",
@@ -37,12 +37,12 @@ const categoryLabel = {
 };
 const testIconClass = { GENERAL_EXAMINATION: "bg-blue-50 text-blue-600", WEIGHING_PERFORMANCE: "bg-blue-50 text-blue-600", REPEATABILITY: "bg-emerald-50 text-emerald-600", ECCENTRICITY: "bg-blue-50 text-blue-600", TARE: "bg-blue-50 text-blue-600", TEMPERATURE_INFLUENCE: "bg-violet-50 text-violet-600", ENDURANCE: "bg-orange-50 text-orange-600", ELECTRONIC_TESTS: "bg-red-50 text-red-600" };
 const testIcons = { GENERAL_EXAMINATION: ClipboardList, WEIGHING_PERFORMANCE: BarChart3, REPEATABILITY: Repeat2, ECCENTRICITY: Target, TARE: Trash2, TEMPERATURE_INFLUENCE: Thermometer, ENDURANCE: Activity, ELECTRONIC_TESTS: Cpu };
-const getTestRoute = (instrumentId, code) => ({
-  GENERAL_EXAMINATION: `/testing/${instrumentId}/general-examination`,
-  WEIGHING_PERFORMANCE: `/testing/${instrumentId}/weighingtest`,
-  ECCENTRICITY: `/testing/${instrumentId}/eccentricity`,
-  REPEATABILITY: `/testing/${instrumentId}/repeatability`,
-  TARE: `/testing/${instrumentId}/tare`,
+const getTestRoute = (instrumentId, code, applicationNumber) => ({
+  GENERAL_EXAMINATION: `/testing/${instrumentId}/general-examination${applicationNumber ? `?applicationNumber=${encodeURIComponent(applicationNumber)}` : ""}`,
+  WEIGHING_PERFORMANCE: `/testing/${instrumentId}/weighingtest${applicationNumber ? `?applicationNumber=${encodeURIComponent(applicationNumber)}` : ""}`,
+  ECCENTRICITY: `/testing/${instrumentId}/eccentricity${applicationNumber ? `?applicationNumber=${encodeURIComponent(applicationNumber)}` : ""}`,
+  REPEATABILITY: `/testing/${instrumentId}/repeatability${applicationNumber ? `?applicationNumber=${encodeURIComponent(applicationNumber)}` : ""}`,
+  TARE: `/testing/${instrumentId}/tare${applicationNumber ? `?applicationNumber=${encodeURIComponent(applicationNumber)}` : ""}`,
   TEMPERATURE_INFLUENCE: `/testing/${instrumentId}/temperature-influence`,
   ENDURANCE: `/testing/${instrumentId}/endurance`,
   ELECTRONIC_TESTS: `/testing/${instrumentId}/electronic-tests`,
@@ -56,6 +56,25 @@ export const InstrumentTestExecution = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const completePlaceholderTest = async (code) => {
+    try {
+      await completeUnimplementedTestApi(data.instrument?._id, code);
+      window.location.reload();
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to complete test.");
+    }
+  };
+  const submitForReview = async () => {
+    setSubmittingReview(true);
+    try {
+      await submitFullInspectionApi(data.instrument?._id);
+      setReviewSubmitted(true);
+    } catch (err) {
+      setError(err.response?.data?.message || err.response?.data?.error || "Failed to submit report for review.");
+    } finally { setSubmittingReview(false); }
+  };
   useEffect(
     () =>
       setHeaderContent({
@@ -178,9 +197,14 @@ export const InstrumentTestExecution = () => {
                 <button
                   key={test.code}
                   type="button"
-                  onClick={() =>
-                    !isSupervisor && isActive && navigate(getTestRoute(data.instrument?._id, test.code))
-                  }
+                  onClick={() => {
+                    if (isSupervisor || !isActive) return;
+                    if (["TEMPERATURE_INFLUENCE", "ENDURANCE"].includes(test.code)) {
+                      completePlaceholderTest(test.code);
+                      return;
+                    }
+                    navigate(getTestRoute(data.instrument?._id, test.code, data.evaluation?.applicationNumber));
+                  }}
                   className={`flex w-full items-center gap-2 px-2 py-2.5 text-left text-[11px] ${!isSupervisor && isActive ? "cursor-pointer hover:bg-blue-50" : "cursor-default"}`}
                 >
                   <span className="w-7 rounded bg-slate-100 px-1 py-1 text-center font-bold text-slate-600">
@@ -234,12 +258,14 @@ export const InstrumentTestExecution = () => {
           </button>
           {!isSupervisor && <button
             type="button"
-            onClick={() => navigate(`/testing/${data.instrument?._id}/weighingtest`)}
+            onClick={submitForReview}
+            disabled={submittingReview || completed !== tests.length}
             className="inline-flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-[10px] font-bold text-white"
           >
-            Open Test <ArrowRight size={13} />
+            {submittingReview ? "Submitting..." : "Submit For Review"} <ArrowRight size={13} />
           </button>}
         </div>
+        {reviewSubmitted && <div className="fixed inset-0 z-50 grid place-items-center bg-slate-900/40"><div className="w-[min(90vw,420px)] rounded-xl bg-white p-6 text-center shadow-2xl"><div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-emerald-100 text-emerald-600"><Check size={25} /></div><h2 className="text-lg font-bold text-slate-900">Report Submitted</h2><p className="mt-2 text-sm text-slate-600">Your inspection report has been submitted for review.</p><div className="mt-5 flex justify-center gap-3"><button type="button" onClick={() => setReviewSubmitted(false)} className="rounded border border-slate-300 bg-white px-5 py-2 text-sm font-bold text-slate-700">Close</button><button type="button" onClick={() => navigate("/testing-person/dashboard")} className="rounded bg-blue-600 px-5 py-2 text-sm font-bold text-white">Back to Dashboard</button></div></div></div>}
       </section>
     </main>
   );
