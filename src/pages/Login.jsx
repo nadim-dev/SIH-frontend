@@ -30,6 +30,8 @@ export const LoginPage = () => {
         .replace(/\s+/g, "_");
       const dashboardByRole = {
         NAWI_ADMIN: "/admin/dashbaord",
+        ADMIN: "/admin/dashbaord",
+        ADMINISTRATOR: "/admin/dashbaord",
         LAB_SUPERVISOR: "/supervisor/dashbaord",
         TESTING_OFFICER: "/testing-person/dashboard",
       };
@@ -120,7 +122,7 @@ export const LoginPage = () => {
                   </button>
                 </div>
               </label>
-              <div className="mb-3 flex justify-end">
+              <div className="-mt-2 mb-2 flex justify-start">
                 <Link
                   className="text-[10px] text-blue-700 no-underline hover:underline"
                   to="/login"

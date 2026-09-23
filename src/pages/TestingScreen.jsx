@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
 import Decimal from 'decimal.js';
-import { getWeighingTestConfigApi, submitInstrumentObservationsApi, createNonComplianceReportApi } from '../api/instrumentApi';
+import { getWeighingTestConfigApi, uploadWeighingEvidenceApi, submitInstrumentObservationsApi, createNonComplianceReportApi } from '../api/instrumentApi';
 import NonComplianceReportModal from '../components/NonComplianceReportModal';
+import EvidenceUpload from '../components/EvidenceUpload';
 
 Decimal.set({ precision: 28, rounding: Decimal.ROUND_HALF_UP });
 
@@ -162,6 +163,7 @@ export const TestingScreen = () => {
 
   const canGenerateNCR = failedItems.length > 0;
 
+
   // 3. Final Submission to Backend
   const handleSubmitTest = async () => {
     setSubmitting(true);
@@ -171,8 +173,7 @@ export const TestingScreen = () => {
         readings: calculatedGrid,
         overallResult: allPassed ? 'PASS' : 'FAIL',
       });
-      alert('Test observations submitted successfully!');
-      navigate(applicationNumber ? `/testing/${applicationNumber}/test-execution` : `/testing/${id}/test-execution`);
+      navigate(`/testing/${applicationNumber || id}/test-execution`);
     } catch (err) {
       setServerError(err.response?.data?.error || 'Failed to submit test results.');
     } finally {
@@ -261,6 +262,8 @@ export const TestingScreen = () => {
           ))}
         </tbody>
       </table></div>
+
+      <EvidenceUpload uploadImage={async (file, metadata) => { const response = await uploadWeighingEvidenceApi(id, file, { ...metadata, testType: "weighingTest" }); return response.evidence?.at(-1); }} />
 
       <div className="testing-footer">
         <div>

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronRight, FileText, Search } from "lucide-react";
 import { useNavigate, useOutletContext } from "react-router-dom";
-import { getMyEvaluationsApi } from "../../api/instrumentApi";
+import { getSupervisorEvaluationsApi } from "../../api/instrumentApi";
 
 export const SupervisorEvaluation = () => {
   const { setHeaderContent } = useOutletContext();
@@ -17,8 +17,14 @@ export const SupervisorEvaluation = () => {
       subtitle:
         "Review submitted instrument evaluations and compliance results.",
     });
-    getMyEvaluationsApi()
-      .then((response) => setEvaluations(response.data?.data || []))
+    getSupervisorEvaluationsApi()
+      .then((response) => {
+        const payload = response.data;
+        const evaluationRows = Array.isArray(payload)
+          ? payload
+          : payload?.data || payload?.evaluations || [];
+        setEvaluations(evaluationRows);
+      })
       .finally(() => setLoading(false));
   }, [setHeaderContent]);
 
@@ -29,6 +35,8 @@ export const SupervisorEvaluation = () => {
         const text =
           `${evaluation.applicationNumber} ${instrument.modelNumber} ${instrument.manufacturer}`.toLowerCase();
         return (
+          evaluation.status === "SUPERVISOR_REVIEW" &&
+          evaluation.reportStatus !== "GENERATED" &&
           (!query || text.includes(query.toLowerCase())) &&
           (status === "ALL" || evaluation.status === status)
         );
@@ -73,7 +81,7 @@ export const SupervisorEvaluation = () => {
           
         </div>
         <div className="w-full overflow-x-auto rounded-md border mt-5 border-[#E2E8F0]">
-          <table className="w-full min-w-[980px] text-left text-xs">
+          <table className="w-full min-w-[820px] text-left text-[11px]">
             <thead className="bg-[#F1F5F9] text-[#334155]">
               <tr>
                 {[
@@ -86,7 +94,7 @@ export const SupervisorEvaluation = () => {
                   "Last Updated",
                   "Action",
                 ].map((heading) => (
-                  <th key={heading} className="px-3 py-3 font-bold">
+                  <th key={heading} className="px-2 py-2.5 font-bold">
                     {heading}
                   </th>
                 ))}
@@ -95,7 +103,7 @@ export const SupervisorEvaluation = () => {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="8" className="p-8 text-center text-slate-500">
+                    <td colSpan="8" className="p-8 text-center text-slate-500">
                     Loading evaluations...
                   </td>
                 </tr>
@@ -107,38 +115,38 @@ export const SupervisorEvaluation = () => {
                       key={evaluation._id}
                       className="border-t border-[#E2E8F0] hover:bg-blue-50"
                     >
-                      <td className="px-3 py-3 font-bold">
+                      <td className="px-2 py-2.5 font-bold">
                         {String(index + 1).padStart(2, "0")}
                       </td>
-                      <td className="px-3 py-3 font-bold text-[#0F4C9A]">
+                      <td className="px-2 py-2.5 font-bold text-[#0F4C9A]">
                         {evaluation.applicationNumber}
                       </td>
-                      <td className="px-3 py-3">
+                      <td className="px-2 py-2.5">
                         {instrument.instrumentType || "—"}
                       </td>
-                      <td className="px-3 py-3">
+                      <td className="px-2 py-2.5">
                         {instrument.modelNumber || "—"}
                       </td>
-                      <td className="px-3 py-3">
+                      <td className="px-2 py-2.5">
                         {instrument.manufacturer || "—"}
                       </td>
-                      <td className="px-3 py-3">
+                      <td className="px-2 py-2.5">
                         {evaluation.testingOfficerName || "—"}
                       </td>
-                      <td className="px-3 py-3 whitespace-nowrap">
+                      <td className="px-2 py-2.5 whitespace-nowrap">
                         {new Date(
                           evaluation.updatedAt || evaluation.createdAt,
                         ).toLocaleDateString()}
                       </td>
-                      <td className="px-3 py-3">
+                      <td className="px-2 py-2.5">
                         <button
                           type="button"
                           onClick={() =>
                             navigate(
-                              `/testing/${evaluation.applicationNumber}/workflow`,
+                              `/supervisor/evaluations/${evaluation.applicationNumber}/review`,
                             )
                           }
-                          className="inline-flex items-center gap-1 rounded-md border border-[#DBEAFE] px-3 py-1.5 font-bold text-[#2563EB]"
+                          className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-[#DBEAFE] px-3 py-1.5 font-bold text-[#2563EB]"
                         >
                           <FileText size={13} /> Review{" "}
                           <ChevronRight size={13} />

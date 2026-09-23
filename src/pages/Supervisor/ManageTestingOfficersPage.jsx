@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { activateTestingOfficerApi, createTestingOfficerApi, deactivateTestingOfficerApi, deleteTestingOfficerApi, getTestingOfficersApi } from "../../api/authApi";
+import { getSupervisorEvaluationsApi } from "../../api/instrumentApi";
 import { Activity, Ban, Eye, EyeOff, FileText, FlaskConical, MoreVertical, Plus, Search, Trash2, UserRound, Users } from "lucide-react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import getInitials from "../../utils/getInitial";
@@ -8,6 +9,7 @@ export const ManageTestingOfficersPage = () => {
   const { setHeaderContent } = useOutletContext();
   const navigate = useNavigate();
   const [officerRows, setOfficerRows] = useState([]);
+  const [pendingReviewCount, setPendingReviewCount] = useState(0);
   const [loadingOfficers, setLoadingOfficers] = useState(true);
   const [showAddOfficer, setShowAddOfficer] = useState(false);
   const [selectedOfficer, setSelectedOfficer] = useState(null);
@@ -23,8 +25,14 @@ export const ManageTestingOfficersPage = () => {
   useEffect(() => {
     const loadTestingOfficers = async () => {
       try {
-        const response = await getTestingOfficersApi();
-        setOfficerRows(response.officers || []);
+        const [officerResponse, reviewResponse] = await Promise.all([
+          getTestingOfficersApi(),
+          getSupervisorEvaluationsApi(),
+        ]);
+        const officers = officerResponse?.officers || officerResponse?.data?.officers || [];
+        const reviews = reviewResponse?.data || reviewResponse?.evaluations || [];
+        setOfficerRows(Array.isArray(officers) ? officers : []);
+        setPendingReviewCount(Array.isArray(reviews) ? reviews.length : 0);
       } catch (error) {
         console.error("Unable to load testing officers:", error);
       } finally {
@@ -63,10 +71,10 @@ export const ManageTestingOfficersPage = () => {
   return (
     <section className="px-1">
       <div className="grid grid-cols-1 gap-4 min-[701px]:grid-cols-2 min-[1100px]:grid-cols-4">
-        <SummaryCard label="Total Officers" value="12" description="Registered in the system" icon={Users} tone="blue" />
-        <SummaryCard label="Active Officers" value="8" description="Currently active accounts"  icon={UserRound} tone="green" />
-        <SummaryCard label="In Testing" value="3" description="Currently executing tests"  icon={FlaskConical} tone="amber" />
-        <SummaryCard label="Pending Review" value="5" description="Awaiting supervisor review"  icon={FileText} tone="red" />
+        <SummaryCard label="Total Officers" value={officerRows.length} description="Registered in the system" icon={Users} tone="blue" />
+        <SummaryCard label="Active Officers" value={officerRows.filter((officer) => officer.status === "Active").length} description="Currently active accounts"  icon={UserRound} tone="green" />
+        <SummaryCard label="In Testing" value={officerRows.filter((officer) => officer.status === "In Testing").length} description="Currently executing tests"  icon={FlaskConical} tone="amber" />
+        <SummaryCard label="Pending Review" value={pendingReviewCount} description="Awaiting supervisor review"  icon={FileText} tone="red" />
       </div>
 
       <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5 shadow-[0_6px_16px_rgba(23,32,51,0.04)]">

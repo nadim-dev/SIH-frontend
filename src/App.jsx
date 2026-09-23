@@ -12,7 +12,7 @@ import { EccentricityTestScreen } from "./pages/Tests/EccentricityTestScreen";
 import { RepeatabilityTestScreen } from "./pages/Tests/RepeatabilityTestScreen";
 import { LoginPage } from "./pages/Login";
 import { TestingPersonDashboard } from "./pages/TestingPersonDashbaord";
-import { AdminDashbaord } from "./pages/AdminDashboard";
+import { AdminDashbaord } from "./pages/Admin/AdminDashboard";
 import { AdminReports } from "./pages/AdminReports";
 import { ProjectStatus } from "./pages/ProjectStatus";
 import { CertificateVerification } from "./pages/CertificateVerification";
@@ -30,6 +30,10 @@ import { NonComplianceReportPage } from "./pages/Supervisor/NonComplianceReportP
 import { TareTest } from "./pages/Tests/TareTest";
 import { TempretureTest } from "./pages/Tests/TempretureTest";
 import { SupervisorEvaluation } from "./pages/Supervisor/SupervisorEvaluation";
+import { SupervisorEvaluationReview } from "./pages/Supervisor/SupervisorEvaluationReview";
+import { SupervisorReport } from "./pages/Supervisor/SupervisorReport";
+import { SupervisorReportsPage } from "./pages/Supervisor/SupervisorReportsPage";
+import { NotificationsPage } from "./pages/NotificationsPage";
 
 function useAuth() {
   return useContext(AuthContext);
@@ -123,6 +127,7 @@ const router = createBrowserRouter([
             path: "/testing/:applicationId/laboratory-enviroment",
             element: <LaboratoryEnvironment />,
           },
+
           {
             path: "/testing/:id/weighingtest",
             element: <TestingScreen />,
@@ -164,6 +169,14 @@ const router = createBrowserRouter([
             element: <SupervisorEvaluation />,
           },
           {
+            path: "/supervisor/evaluations/:applicationId/review",
+            element: <SupervisorEvaluationReview />,
+          },
+          {
+            path: "/supervisor/reports/:applicationId",
+            element: <SupervisorReport />,
+          },
+          {
             path: "/supervisor/non-compliance",
             element: <NonComplianceReportPage />,
           },
@@ -173,7 +186,12 @@ const router = createBrowserRouter([
           },
           {
             path: "/supervisor/reports",
-            element: <Supervisordashbaord />,
+            element: <SupervisorReportsPage />,
+          },
+          { path: "/supervisor/notifications", element: <NotificationsPage /> },
+          {
+            path: "/testing-person/notifications",
+            element: <NotificationsPage />,
           },
           {},
         ],

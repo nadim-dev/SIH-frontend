@@ -1,6 +1,8 @@
 import React from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { getTareTestConfigApi, submitTareTestApi } from "../../api/instrumentApi";
+import { uploadWeighingEvidenceApi } from "../../api/instrumentApi";
+import EvidenceUpload from "../../components/EvidenceUpload";
 
 export const TareTest = () => {
   const { id } = useParams();
@@ -109,6 +111,7 @@ export const TareTest = () => {
             </tbody>
           </table>
         </div>
+        <EvidenceUpload uploadImage={async (file, metadata) => { const response = await uploadWeighingEvidenceApi(id, file, { ...metadata, testType: "tareTest" }); return response.evidence?.at(-1); }} />
         <div className="testing-footer">
           <div>
             <strong>Tare Conformance: </strong>

@@ -2,6 +2,8 @@ import React from "react";
 import { useNavigate, useOutletContext, useParams, useSearchParams } from "react-router-dom";
 import { getRepeatabilityTestConfigApi, submitRepeatabilityObservationsApi, createNonComplianceReportApi} from "../../api/instrumentApi";
 import NonComplianceReportModal from "../../components/NonComplianceReportModal";
+import EvidenceUpload from "../../components/EvidenceUpload";
+import { uploadWeighingEvidenceApi } from "../../api/instrumentApi";
 
 export const RepeatabilityTestScreen = () => {
   const { setHeaderContent } = useOutletContext();
@@ -88,7 +90,7 @@ export const RepeatabilityTestScreen = () => {
         
         <div className="repeatability-table-wrap">
           <table className="repeatability-table">
-            <thead>
+            <thead className="repeatability-table-head">
               <tr>
                 {[ 
                   "Run #",
@@ -103,13 +105,13 @@ export const RepeatabilityTestScreen = () => {
             </thead>
             <tbody>
               {calculatedRuns.map((row, index) => (
-                <tr key={index}>
+                <tr key={index} className={index % 2 === 0 ? "repeatability-row-even" : "repeatability-row-odd"}>
                   <td>{index + 1}</td>
                   <td>{config.testLoad}</td>
                   <td><input className="grid-input" type="number" step="any" value={row.indicated} onChange={(event) => updateRun(index, "indicated", event.target.value)} /></td>
                   <td>{row.indication === null ? "—" : row.indication.toFixed(4)}</td>
                   <td>
-                    <span className="status pending">{row.valid ? "RECORDED" : "PENDING"}</span>
+                    <span className={`status ${row.valid ? "pass" : "pending"}`}>{row.valid ? "RECORDED" : "PENDING"}</span>
                   </td>
                 </tr>
               ))}
@@ -117,14 +119,15 @@ export const RepeatabilityTestScreen = () => {
           </table>
         </div>
         
-        <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
-          <h2 className="text-base font-bold text-slate-900">Repeatability Summary</h2>
-          <div className="mt-3 grid gap-2 sm:grid-cols-3">
+        <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 p-2">
+          <h2 className="text-sm font-bold text-slate-900">Repeatability Summary</h2>
+          <div className="mt-2 grid gap-2 sm:grid-cols-3">
             <div className="rounded-md border border-slate-200 bg-white p-3"><span className="block text-xs font-semibold text-slate-500">Variation</span><strong className="mt-1 block text-lg text-slate-900">{variationRange === null ? "—" : variationRange.toFixed(4)} {config.instrument.unit}</strong></div>
             <div className="rounded-md border border-slate-200 bg-white p-3"><span className="block text-xs font-semibold text-slate-500">Applicable MPE</span><strong className="mt-1 block text-lg text-slate-900">±{config.mpe} {config.instrument.unit}</strong></div>
             <div className="rounded-md border border-slate-200 bg-white p-3"><span className="block text-xs font-semibold text-slate-500">Overall Result</span><strong className={`mt-1 block text-lg ${passed ? "text-green-700" : canSubmit ? "text-red-600" : "text-slate-400"}`}>{passed ? "PASS" : canSubmit ? "FAIL" : "PENDING"}</strong></div>
           </div>
         </div>
+        <EvidenceUpload uploadImage={async (file, metadata) => { const response = await uploadWeighingEvidenceApi(id, file, { ...metadata, testType: "repeatabilityTest" }); return response.evidence?.at(-1); }} />
         <div className="repeatability-footer">
           <div>
             <strong>Variation: </strong>{variationRange === null ? "—" : variationRange.toFixed(4)} {config.instrument.unit}

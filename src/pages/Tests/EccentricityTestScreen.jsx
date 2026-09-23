@@ -2,14 +2,9 @@ import React, { useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { createNonComplianceReportApi, getEccentricityTestConfigApi, submitEccentricityObservationsApi } from "../../api/instrumentApi";
 import NonComplianceReportModal from "../../components/NonComplianceReportModal";
+import EvidenceUpload from "../../components/EvidenceUpload";
+import { uploadWeighingEvidenceApi } from "../../api/instrumentApi";
 
-const fallbackPositions = [
-  ["1", "Center", "50.000", "50.000", "0.025", "50.0000", "0.0000"],
-  ["2", "Front-Left", "50.000", "50.000", "0.020", "50.0050", "+0.0050"],
-  ["3", "Rear-Left", "50.000", "50.000", "0.030", "49.9950", "-0.0050"],
-  ["4", "Rear-Right", "50.000", "50.000", "0.015", "50.0100", "+0.0100"],
-  ["5", "Front-Right", "50.000", "50.000", "0.035", "49.9900", "-0.0100"],
-];
 
 export const EccentricityTestScreen = () => {
   const { id } = useParams();
@@ -192,6 +187,8 @@ export const EccentricityTestScreen = () => {
             </table>
           </div>
         </div>
+
+        <EvidenceUpload uploadImage={async (file, metadata) => { const response = await uploadWeighingEvidenceApi(id, file, { ...metadata, testType: "eccentricityTest" }); return response.evidence?.at(-1); }} />
 
         <div className="eccentricity-footer">
           <div className="conformance">

@@ -1,4 +1,4 @@
-import { AlertTriangle, ChevronRight, ClipboardList, FileText, House, Users } from "lucide-react";
+import { AlertTriangle, Bell, ChevronRight, ClipboardList, FileText, House, Users } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useContext } from "react";
 import nawiIcon from "../assets/nawi-icon.png";
@@ -7,6 +7,7 @@ import getInitials from "../utils/getInitial";
 const navigation = [
   { label: "Dashboard", to: "/testing-person/dashboard", icon: House },
   { label: "Reports", to: "/admin/reports", icon: FileText },
+  { label: "Notifications", to: "/testing-person/notifications", icon: Bell },
 ];
 
 const supervisorNavigation = [
@@ -15,6 +16,7 @@ const supervisorNavigation = [
   { label: "Evaluations", to: "/supervisor/evaluations", icon: ClipboardList },
   { label: "Non-Compliance", to: "/supervisor/non-compliance", icon: AlertTriangle },
   { label: "Reports", to: "/supervisor/reports", icon: FileText },
+  { label: "Notifications", to: "/supervisor/notifications", icon: Bell },
 ];
 
 export function Sidebar() {
@@ -28,7 +30,7 @@ export function Sidebar() {
   // Route fallback keeps the admin sidebar correct even during auth hydration.
   const isAdmin = ["NAWI_ADMIN", "ADMIN", "ADMINISTRATOR"].includes(String(currentUser?.role || "").toUpperCase()) || location.pathname.startsWith("/admin/");
   const visibleNavigation = (isLabSupervisor ? supervisorNavigation : navigation)
-    .filter(({ label }) => !isAdmin || !["My Tests", "Instruments"].includes(label))
+    .filter(({ label }) => (!isAdmin || !["My Tests", "Instruments"].includes(label)) && !(isAdmin && label === "Notifications"))
     .map((item) => isAdmin && item.label === "Dashboard" ? { ...item, to: "/admin/dashbaord" } : item);
   return (
     <aside className="nawi-sidebar">

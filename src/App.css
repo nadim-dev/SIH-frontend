@@ -47,7 +47,7 @@
 /* The repeatability result is displayed in the larger summary card above. */
 .repeatability-footer>div:first-child{display:none}
 /* Keep repeatability table headings visible while entering readings. */
-.repeatability-table th{position:sticky;top:0;z-index:2}
+.repeatability-table th{position:sticky;top:0;z-index:2}.repeatability-table-head th{background:#17345a;color:#fff;border-color:#244a75}.repeatability-row-even{background:#f8fbff}.repeatability-row-odd{background:#fff}.repeatability-table tbody tr:hover{background:#eaf3ff}.repeatability-table .grid-input{border-color:#bfd4eb;background:#fff;box-shadow:0 1px 2px #17345a12}.repeatability-table .status.pass{color:#087443;background:#dcfce7}.repeatability-table .status.pending{color:#946200;background:#fff4d6}.nawi-main-column main.min-h-full h1{font-size:24px!important;letter-spacing:-.5px!important;margin:0!important}
 .eccentricity-content{display:flex;flex-direction:column}.eccentricity-content .platform-panel{width:100%}.eccentricity-content .eccentricity-table-wrap{width:100%}
 .eccentricity-content .platform-panel{display:grid;grid-template-columns:280px minmax(420px,1fr);column-gap:28px;align-items:center}.eccentricity-content .platform-panel h2,.eccentricity-content .platform-panel .placement-help{grid-column:1}.eccentricity-content .platform-panel .platform-wrap{grid-column:2;grid-row:1 / span 4}.eccentricity-content .platform-panel .platform-caption,.eccentricity-content .platform-panel .placement-guide{grid-column:1}.eccentricity-content .platform-panel .placement-guide{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .eccentricity-content .platform-panel{padding:14px 18px}.eccentricity-content .platform-panel .platform-wrap{height:240px}.eccentricity-content .platform-panel .platform-caption{margin-top:4px}
@@ -56,3 +56,7 @@
 .eccentricity-page{padding-top:6px}.eccentricity-shell{margin-top:0}
 .eccentricity-content .platform-panel h2{font-size:18px!important;line-height:1.2;text-align:left}.eccentricity-content .platform-panel .placement-help{text-align:left;max-width:320px}.eccentricity-content .platform-panel .platform-caption{text-align:left;margin-left:4px}
 .eccentricity-table .table-input:has(input){padding:0;border:0;background:transparent}.eccentricity-table .table-input input{border:1px solid #dbe2ea;border-radius:5px;padding:7px 8px;outline:none}
+.supervisor-evidence-meta{display:flex;align-items:center;gap:12px;width:100%;max-width:28rem}
+main .flex.flex-wrap.gap-3>div:has(>a){display:flex;align-items:center;gap:12px;width:100%;max-width:28rem}
+main .flex.flex-wrap.gap-3>div:has(>a)>div{font-size:11px;line-height:1.5}
+.eccentricity-table{min-width:0;table-layout:fixed}.eccentricity-table th,.eccentricity-table td{white-space:normal;overflow-wrap:anywhere}.eccentricity-table .grid-input{width:76px!important;max-width:100%}

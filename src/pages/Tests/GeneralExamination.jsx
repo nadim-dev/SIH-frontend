@@ -22,7 +22,7 @@ const sections = [
   {
     id: "identification",
     title: "1. Instrument Identification & Metrological Characteristics",
-    clause: "R 76-1 § 7.1",
+    clause: "R 76-1, 7.1",
     photoKey: "nameplate",
     photoLabel: "Nameplate Photo",
     photoHint: "One photo covers Class, Max, Min, e, Serial No.",
@@ -44,8 +44,8 @@ const sections = [
       },
       {
         key: "softwareId",
-        label: "Software Identification recorded",
-        hint: "Check and record version",
+        label: "Software Identification / Version",
+        hint: "Record the software identification or version displayed by the instrument.",
         hasTextInput: true,
       },
     ],
@@ -53,7 +53,7 @@ const sections = [
   {
     id: "markings",
     title: "2. Descriptive Markings (Inscriptions)",
-    clause: "R 76-1 § 7.2",
+    clause: "R 76-1, 7.2",
     photoKey: "nameplate",
     reusePhoto: true,
     items: [
@@ -82,7 +82,7 @@ const sections = [
   {
     id: "construction",
     title: "3. Construction & Security",
-    clause: "R 76-1 § 7.3 / 8.1",
+    clause: "R 76-1, 7.3 / 8.1",
     items: [
       {
         key: "levelIndicator",
@@ -104,7 +104,7 @@ const sections = [
   {
     id: "functional",
     title: "4. Functional Spot Checks",
-    clause: "R 76-1 § 8.2",
+    clause: "R 76-1, 8.2",
     items: [
       {
         key: "zeroSetting",
@@ -298,7 +298,17 @@ function ChecklistItem({
         )}
       </div>
 
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className={`flex gap-2 flex-wrap ${item.hasTextInput ? "flex-col items-start" : "items-center"}`}>
+        {item.hasTextInput && (
+          <input
+            type="text"
+            placeholder="Enter software identification / version"
+            value={textValue || ""}
+            onChange={(e) => onTextChange(item.key, e.target.value)}
+            className="!m-0 w-full max-w-sm rounded-md border border-gray-300 px-3 py-2 text-xs focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+          />
+        )}
+        <div className="flex items-center gap-2 flex-wrap">
         <button
           type="button"
           onClick={() => onToggle(item.key, "pass")}
@@ -327,16 +337,23 @@ function ChecklistItem({
         >
           Fail
         </button>
-
         {item.hasTextInput && (
-          <input
-            type="text"
-            placeholder="e.g., v2.4.1"
-            value={textValue || ""}
-            onChange={(e) => onTextChange(item.key, e.target.value)}
-            className="ml-2 px-3 py-1.5 border border-gray-300 rounded-md text-xs w-28 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-          />
+          <button
+            type="button"
+            onClick={() => onToggle(item.key, "na")}
+            disabled={!canAssess}
+            className={`px-4 py-1.5 rounded-md text-xs font-semibold border-2 transition-all ${
+              value === "na"
+                ? "bg-slate-600 border-slate-600 text-white"
+                : canAssess
+                  ? "bg-white border-gray-300 text-gray-700 hover:border-slate-600 hover:text-slate-600"
+                  : "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed"
+            }`}
+          >
+            N/A
+          </button>
         )}
+        </div>
       </div>
     </div>
   );
@@ -365,7 +382,7 @@ function SectionCard({
     <div className="bg-white rounded-lg shadow-sm mb-5 overflow-hidden border border-gray-100">
       <div className="px-6 py-3 bg-gray-100 border-b border-gray-200 flex justify-between items-center">
         <h2 className="font-bold text-gray-900 text-base">{section.title}</h2>
-        <span className="text-xs text-gray-500 font-medium">
+        <span className="rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-bold tracking-wide text-blue-800">
           {section.clause}
         </span>
       </div>
@@ -497,7 +514,7 @@ export default function GeneralExamination() {
   const { passedCount, failedCount } = useMemo(() => {
     const vals = Object.values(values);
     return {
-      passedCount: vals.filter((v) => v === "pass").length,
+      passedCount: vals.filter((v) => v === "pass" || v === "na").length,
       failedCount: vals.filter((v) => v === "fail").length,
     };
   }, [values]);
@@ -511,7 +528,7 @@ export default function GeneralExamination() {
     if (item.key === "printingDevice") return instrumentData?.hasPrintingDevice === true;
     return true;
   }));
-  const allPassed = applicableItems.length > 0 && applicableItems.every((item) => values[item.key] === "pass");
+  const allPassed = applicableItems.length > 0 && applicableItems.every((item) => ["pass", "na"].includes(values[item.key]));
   const canProceed = allPassed;
   const canGenerateNCR = hasFailures;
   const failedItems = useMemo(
@@ -580,9 +597,9 @@ export default function GeneralExamination() {
     e.preventDefault();
     if (!canProceed) return;
 
-    const checklist = sections.flatMap((section) => section.items.map((item) => ({ key: item.key, label: item.label, result: values[item.key] === "pass" ? "PASS" : "FAIL", textValue: textValues[item.key] || "" })));
+    const checklist = sections.flatMap((section) => section.items.map((item) => ({ key: item.key, label: item.label, result: values[item.key] === "pass" ? "PASS" : values[item.key] === "na" ? "NA" : "FAIL", textValue: textValues[item.key] || "" })));
     submitGeneralExaminationApi(instrumentId, { checklist, photos: Object.fromEntries(Object.entries(photos).map(([key, photo]) => [key, photo.url || photo])), passed: true })
-      .then(() => navigate(applicationNumber ? `/testing/${instrumentId}/weighingtest?applicationNumber=${encodeURIComponent(applicationNumber)}` : `/testing/${instrumentId}/weighingtest`))
+      .then(() => navigate(applicationNumber ? `/testing/${applicationNumber}/test-execution` : `/testing/${instrumentId}/test-execution`))
       .catch((error) => setLoadError(error.message || "Failed to save General Examination."));
     return;
 
@@ -601,7 +618,7 @@ export default function GeneralExamination() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-3 px-4">
+    <div className="-mt-3 min-h-screen bg-gray-50 px-4 py-0">
       <div className="max-w-4xl mx-auto ">
         {/* Instrument Bar */}
         <InstrumentBar instrument={instrumentData} />
@@ -653,7 +670,7 @@ export default function GeneralExamination() {
             <button
               type="button"
               onClick={() => window.history.back()}
-              className="px-6 py-3 rounded-lg bg-white border-2 border-gray-300 text-gray-700 font-semibold text-sm hover:border-gray-500 transition-all"
+              className="px-4 py-2 rounded-md bg-white border border-gray-300 text-gray-700 font-semibold text-xs hover:border-gray-500 transition-all"
             >
               ← Back
             </button>

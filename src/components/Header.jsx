@@ -1,12 +1,58 @@
 import { Bell, ChevronDown, LogOut } from "lucide-react";
-import { useContext, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useContext, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import getInitials from "../utils/getInitial";
 import { logoutApi } from "../api/authApi";
+import { getMyNotificationsApi } from "../api/instrumentApi";
 
 export function Header({ user,title,subtitle,setCurrentUser}) {
   const [isOpen, setIsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const role = String(user?.role || "")
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, "_");
+  const notificationPath = role === "LAB_SUPERVISOR"
+    ? "/supervisor/notifications"
+    : role === "TESTING_OFFICER"
+      ? "/testing-person/notifications"
+      : "";
+
+  useEffect(() => {
+    if (!notificationPath) {
+      setUnreadCount(0);
+      return undefined;
+    }
+
+    const loadUnreadCount = () => {
+      getMyNotificationsApi()
+        .then((response) => {
+          const payload = response?.data ?? response;
+          const rows = Array.isArray(payload)
+            ? payload
+            : payload?.data || payload?.notifications || [];
+          setUnreadCount(
+            Array.isArray(rows) ? rows.filter((item) => !item.isRead).length : 0,
+          );
+        })
+        .catch(() => setUnreadCount(0));
+    };
+
+    loadUnreadCount();
+    const refresh = window.setInterval(loadUnreadCount, 30000);
+    window.addEventListener("notifications-updated", loadUnreadCount);
+    return () => {
+      window.clearInterval(refresh);
+      window.removeEventListener("notifications-updated", loadUnreadCount);
+    };
+  }, [notificationPath, location.pathname]);
+
+  const openNotifications = () => {
+    if (notificationPath) navigate(notificationPath);
+  };
 
   const handleLogout = async () => {
     try { await logoutApi(); } finally {
@@ -24,9 +70,18 @@ export function Header({ user,title,subtitle,setCurrentUser}) {
        
       </div>
       <div className="nawi-header-actions">
-        <button type="button" className="nawi-icon-button" aria-label="Notifications">
+        <button
+          type="button"
+          className="nawi-icon-button relative mr-3"
+          aria-label={unreadCount ? `${unreadCount} unread notifications` : "Notifications"}
+          onClick={openNotifications}
+        >
           <Bell size={20} />
-          <i />
+          {unreadCount > 0 && (
+            <span className="absolute -right-1.5 -top-1.5 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-[#d32845] px-0.5 text-[9px] font-bold leading-none text-white">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
         </button>
         <div className="relative">
           <button type="button" className="flex cursor-pointer items-center gap-[11px] border-0 bg-transparent p-0 text-left text-inherit" aria-expanded={isOpen} aria-haspopup="menu" onClick={() => setIsOpen((open) => !open)}>
