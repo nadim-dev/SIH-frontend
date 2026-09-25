@@ -8,7 +8,7 @@ import { AuthContext } from "../context/authContextByValue";
 export const LoginPage = () => {
   const navigate = useNavigate();
   const { setCurrentUser } = useContext(AuthContext);
-  const [form, setForm] = useState({ email: "kaif123@nawipro.com", password: "Admin@123" });
+  const [form, setForm] = useState({ email: "tester@gmail.com", password: "Admin@123" });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

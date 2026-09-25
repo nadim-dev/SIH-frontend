@@ -145,6 +145,7 @@ export const TestingPersonDashboard = () => {
                 evaluations.map((e) => {
                   const i = e.instrumentId || {};
                   const p = e.progress || 0;
+                  const isFinal = p >= 100;
                   const stage = e.status === "DOCUMENTS_PENDING" ? "Documents" : e.status === "ENVIRONMENT_PENDING" ? "Environment" : e.status.replaceAll("_", " ");
                   const sc =
                     e.status === "COMPLETED"
@@ -181,10 +182,10 @@ export const TestingPersonDashboard = () => {
                       <td className="p-2">
                         <button
                           type="button"
-                          onClick={() => navigate(`/testing/${e.applicationNumber}/workflow${new URLSearchParams(window.location.search).get("officerId") ? `?officerId=${encodeURIComponent(new URLSearchParams(window.location.search).get("officerId"))}` : ""}`)}
-                          className={p < 100 ? "inline-flex  cursor-pointer items-center gap-1 rounded bg-[#2563EB] px-2.5 py-1.5 text-white hover:bg-[#1E88E5]" : "inline-flex items-center cursor-pointer gap-1 rounded border border-[#BFDBFE] px-2.5 py-1.5 text-[#2563EB]"}
+                          onClick={() => navigate(isFinal ? `/testing/${e.applicationNumber}/report` : `/testing/${e.applicationNumber}/workflow${new URLSearchParams(window.location.search).get("officerId") ? `?officerId=${encodeURIComponent(new URLSearchParams(window.location.search).get("officerId"))}` : ""}`)}
+                          className={!isFinal && p < 100 ? "inline-flex  cursor-pointer items-center gap-1 rounded bg-[#2563EB] px-2.5 py-1.5 text-white hover:bg-[#1E88E5]" : "inline-flex items-center cursor-pointer gap-1 rounded border border-[#BFDBFE] px-2.5 py-1.5 text-[#2563EB]"}
                         >
-                          {p < 100 ? <>Continue <ArrowRight size={12} /></> : <><Eye size={12} />View</>}
+                          {isFinal ? <><Eye size={12} />View Report</> : p < 100 ? <>Continue <ArrowRight size={12} /></> : <><Eye size={12} />View</>}
                         </button>
                       </td>
                     </tr>

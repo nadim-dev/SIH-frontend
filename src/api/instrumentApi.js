@@ -8,13 +8,15 @@ export const InstrumentEvaluationApi = (applicationId) =>
 
 export const getMyEvaluationsApi = (officerId) =>
     axiosWithCreds.get("/api/instruments/my-evaluations", { params: officerId ? { officerId } : undefined });
-export const getSupervisorEvaluationsApi = () =>
-    axiosWithCreds.get("/api/instruments/supervisor-evaluations");
+export const getSupervisorEvaluationsApi = (labId) =>
+  axiosWithCreds.get("/api/instruments/supervisor-evaluations", { params: labId ? { labId } : undefined });
 export const reviewSupervisorEvaluationApi = (applicationId, decision, remarks = "") =>
   axiosWithCreds.patch(`/api/instruments/${encodeURIComponent(applicationId)}/supervisor-review`, { decision, remarks });
 export const getGeneratedReportApi = (applicationId) =>
   axiosWithCreds.get(`/api/instruments/${encodeURIComponent(applicationId)}/report`);
 export const getGeneratedReportsApi = () => axiosWithCreds.get("/api/instruments/supervisor-reports");
+export const getAllGeneratedReportsAdminApi = () => axiosWithCreds.get("/api/instruments/admin/generated-reports");
+export const verifyReportApi = (reportId) => axiosWithoutCreds.get(`/api/instruments/reports/verify/${encodeURIComponent(reportId)}`);
 export const getMyNotificationsApi = () => axiosWithCreds.get("/api/notifications");
 export const markNotificationReadApi = (notificationId) => axiosWithCreds.patch(`/api/notifications/${notificationId}/read`);
 export const markAllNotificationsReadApi = () => axiosWithCreds.patch("/api/notifications/read-all");

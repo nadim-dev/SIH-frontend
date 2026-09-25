@@ -12,10 +12,14 @@ import { EccentricityTestScreen } from "./pages/Tests/EccentricityTestScreen";
 import { RepeatabilityTestScreen } from "./pages/Tests/RepeatabilityTestScreen";
 import { LoginPage } from "./pages/Login";
 import { TestingPersonDashboard } from "./pages/TestingPersonDashbaord";
+import { TestingPersonReports } from "./pages/TestingPersonReports";
 import { AdminDashbaord } from "./pages/Admin/AdminDashboard";
 import { AdminReports } from "./pages/AdminReports";
+import { AdminReportsPage } from "./pages/Admin/AdminReportsPage";
+import AuditLog from "./pages/Admin/auditlog";
 import { ProjectStatus } from "./pages/ProjectStatus";
 import { CertificateVerification } from "./pages/CertificateVerification";
+import { ReportVerification } from "./pages/ReportVerification";
 import { Supervisordashbaord } from "./pages/SupervisorDashboard";
 import DashboardLayout from "./layout/dashbaordlayout";
 import { AuthContext } from "./context/authContextByValue";
@@ -34,6 +38,8 @@ import { SupervisorEvaluationReview } from "./pages/Supervisor/SupervisorEvaluat
 import { SupervisorReport } from "./pages/Supervisor/SupervisorReport";
 import { SupervisorReportsPage } from "./pages/Supervisor/SupervisorReportsPage";
 import { NotificationsPage } from "./pages/NotificationsPage";
+import { AddLaboratory, ManageLabs } from "./pages/Admin/ManageLabs";
+import { AdminUsers } from "./pages/Admin/AdminUsers";
 
 function useAuth() {
   return useContext(AuthContext);
@@ -81,6 +87,7 @@ const router = createBrowserRouter([
     element: <ProjectStatus />,
   },
   { path: "/certificate/:number", element: <CertificateVerification /> },
+  { path: "/verify-report/:reportId", element: <ReportVerification /> },
   {
     path: "/register/instrument",
     element: <InstrumentRegister />,
@@ -100,12 +107,20 @@ const router = createBrowserRouter([
             element: <TestingPersonDashboard />,
           },
           {
+            path: "/testing-person/reports",
+            element: <TestingPersonReports />,
+          },
+          {
             path: "/testing-person/instruments",
             element: <InstrumentRegister />,
           },
           {
             path: "/testing/:applicationId/workflow",
             element: <InstrumentWorkFlow />,
+          },
+          {
+            path: "/testing/:applicationId/report",
+            element: <SupervisorReport />,
           },
           {
             path: "/testing/:applicationId/test-plan",
@@ -150,7 +165,23 @@ const router = createBrowserRouter([
           },
           {
             path: "/admin/reports",
-            element: <AdminReports />,
+            element: <AdminReportsPage />,
+          },
+          {
+            path: "/admin/audit-logs",
+            element: <AuditLog />,
+          },
+          {
+            path: "/admin/laboratories",
+            element: <ManageLabs />,
+          },
+          {
+            path: "/admin/users",
+            element: <AdminUsers />,
+          },
+          {
+            path: "/admin/laboratories/add",
+            element: <AddLaboratory />,
           },
           {
             path: "/testing/:id/tare",
@@ -191,6 +222,10 @@ const router = createBrowserRouter([
           { path: "/supervisor/notifications", element: <NotificationsPage /> },
           {
             path: "/testing-person/notifications",
+            element: <NotificationsPage />,
+          },
+          {
+            path: "/admin/notifications",
             element: <NotificationsPage />,
           },
           {},

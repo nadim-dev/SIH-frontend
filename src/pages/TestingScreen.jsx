@@ -209,7 +209,7 @@ export const TestingScreen = () => {
             <th style={{ padding: '10px' }}>Indication I ({instrument.unit})</th>
             <th style={{ padding: '10px' }}> ΔL ({instrument.unit})</th>
             <th style={{ padding: '10px' }}>True P</th>
-            <th style={{ padding: '10px' }}>Corrected Error Ec</th>
+            <th style={{ padding: '10px' }}>Corrected Error (Ec)</th>
             <th style={{ padding: '10px' }}>MPE Limit</th>
             <th style={{ padding: '10px' }}>Status</th>
           </tr>

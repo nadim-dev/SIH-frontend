@@ -144,7 +144,7 @@ export const EccentricityTestScreen = () => {
               <thead>
                 <tr>
                   {[
-                    "Pos",
+                    "Test Position",
                     "Location",
                     "Load L (kg)",
                     "Indication I (kg)",

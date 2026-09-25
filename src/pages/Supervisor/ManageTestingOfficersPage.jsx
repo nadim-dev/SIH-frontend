@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import { activateTestingOfficerApi, createTestingOfficerApi, deactivateTestingOfficerApi, deleteTestingOfficerApi, getTestingOfficersApi } from "../../api/authApi";
 import { getSupervisorEvaluationsApi } from "../../api/instrumentApi";
 import { Activity, Ban, Eye, EyeOff, FileText, FlaskConical, MoreVertical, Plus, Search, Trash2, UserRound, Users } from "lucide-react";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useNavigate, useOutletContext, useSearchParams } from "react-router-dom";
 import getInitials from "../../utils/getInitial";
 
 export const ManageTestingOfficersPage = () => {
   const { setHeaderContent } = useOutletContext();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [officerRows, setOfficerRows] = useState([]);
   const [pendingReviewCount, setPendingReviewCount] = useState(0);
   const [loadingOfficers, setLoadingOfficers] = useState(true);
@@ -26,8 +27,8 @@ export const ManageTestingOfficersPage = () => {
     const loadTestingOfficers = async () => {
       try {
         const [officerResponse, reviewResponse] = await Promise.all([
-          getTestingOfficersApi(),
-          getSupervisorEvaluationsApi(),
+          getTestingOfficersApi(searchParams.get("labId")),
+          getSupervisorEvaluationsApi(searchParams.get("labId")),
         ]);
         const officers = officerResponse?.officers || officerResponse?.data?.officers || [];
         const reviews = reviewResponse?.data || reviewResponse?.evaluations || [];
@@ -41,7 +42,7 @@ export const ManageTestingOfficersPage = () => {
     };
 
     loadTestingOfficers();
-  }, []);
+  }, [searchParams]);
 
   const handleDeactivate = async (officer) => {
     if (!window.confirm(`Deactivate ${officer.name}?`)) return;

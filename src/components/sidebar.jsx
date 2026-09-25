@@ -1,4 +1,4 @@
-import { AlertTriangle, Bell, ChevronRight, ClipboardList, FileText, House, Users } from "lucide-react";
+import { AlertTriangle, Bell, Building2, ChevronRight, ClipboardList, FileClock, FileText, House, Users } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useContext } from "react";
 import nawiIcon from "../assets/nawi-icon.png";
@@ -6,8 +6,17 @@ import { AuthContext } from "../context/authContextByValue";
 import getInitials from "../utils/getInitial";
 const navigation = [
   { label: "Dashboard", to: "/testing-person/dashboard", icon: House },
-  { label: "Reports", to: "/admin/reports", icon: FileText },
+  { label: "Reports", to: "/testing-person/reports", icon: FileText },
   { label: "Notifications", to: "/testing-person/notifications", icon: Bell },
+];
+
+const adminNavigation = [
+  { label: "Dashboard", to: "/admin/dashbaord", icon: House },
+  { label: "Laboratories", to: "/admin/laboratories", icon: Building2 },
+  { label: "Users", to: "/admin/users", icon: Users },
+  { label: "Reports", to: "/admin/reports", icon: FileText },
+  { label: "Audit Logs", to: "/admin/audit-logs", icon: FileClock },
+  { label: "Notifications", to: "/admin/notifications", icon: Bell },
 ];
 
 const supervisorNavigation = [
@@ -29,8 +38,8 @@ export function Sidebar() {
   const isLabSupervisor = role === "LAB_SUPERVISOR";
   // Route fallback keeps the admin sidebar correct even during auth hydration.
   const isAdmin = ["NAWI_ADMIN", "ADMIN", "ADMINISTRATOR"].includes(String(currentUser?.role || "").toUpperCase()) || location.pathname.startsWith("/admin/");
-  const visibleNavigation = (isLabSupervisor ? supervisorNavigation : navigation)
-    .filter(({ label }) => (!isAdmin || !["My Tests", "Instruments"].includes(label)) && !(isAdmin && label === "Notifications"))
+  const visibleNavigation = (isAdmin ? adminNavigation : isLabSupervisor ? supervisorNavigation : navigation)
+    .filter(({ label }) => (!isAdmin || !["My Tests", "Instruments"].includes(label)))
     .map((item) => isAdmin && item.label === "Dashboard" ? { ...item, to: "/admin/dashbaord" } : item);
   return (
     <aside className="nawi-sidebar">

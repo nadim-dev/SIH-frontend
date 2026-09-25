@@ -19,6 +19,8 @@ export function Header({ user,title,subtitle,setCurrentUser}) {
     ? "/supervisor/notifications"
     : role === "TESTING_OFFICER"
       ? "/testing-person/notifications"
+      : ["NAWI_ADMIN", "ADMIN", "ADMINISTRATOR"].includes(role)
+        ? "/admin/notifications"
       : "";
 
   useEffect(() => {
