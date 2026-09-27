@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
 import Decimal from 'decimal.js';
-import { getWeighingTestConfigApi, uploadWeighingEvidenceApi, submitInstrumentObservationsApi, createNonComplianceReportApi } from '../api/instrumentApi';
+import { getWeighingTestConfigApi, uploadWeighingEvidenceApi, deleteWeighingEvidenceApi, submitInstrumentObservationsApi, createNonComplianceReportApi } from '../api/instrumentApi';
 import NonComplianceReportModal from '../components/NonComplianceReportModal';
 import EvidenceUpload from '../components/EvidenceUpload';
 
@@ -263,7 +263,7 @@ export const TestingScreen = () => {
         </tbody>
       </table></div>
 
-      <EvidenceUpload uploadImage={async (file, metadata) => { const response = await uploadWeighingEvidenceApi(id, file, { ...metadata, testType: "weighingTest" }); return response.evidence?.at(-1); }} />
+      <EvidenceUpload uploadImage={async (file, metadata) => { const response = await uploadWeighingEvidenceApi(id, file, { ...metadata, testType: "weighingTest" }); return response.evidence?.at(-1); }} deleteImage={(item) => deleteWeighingEvidenceApi(id, { testType: "weighingTest", url: item.url })} />
 
       <div className="testing-footer">
         <div>

@@ -1,9 +1,8 @@
 import React from "react";
 import { useNavigate, useOutletContext, useParams, useSearchParams } from "react-router-dom";
-import { getRepeatabilityTestConfigApi, submitRepeatabilityObservationsApi, createNonComplianceReportApi} from "../../api/instrumentApi";
+import { getRepeatabilityTestConfigApi, submitRepeatabilityObservationsApi, createNonComplianceReportApi, uploadWeighingEvidenceApi, deleteWeighingEvidenceApi} from "../../api/instrumentApi";
 import NonComplianceReportModal from "../../components/NonComplianceReportModal";
 import EvidenceUpload from "../../components/EvidenceUpload";
-import { uploadWeighingEvidenceApi } from "../../api/instrumentApi";
 
 export const RepeatabilityTestScreen = () => {
   const { setHeaderContent } = useOutletContext();
@@ -127,7 +126,7 @@ export const RepeatabilityTestScreen = () => {
             <div className="rounded-md border border-slate-200 bg-white p-3"><span className="block text-xs font-semibold text-slate-500">Overall Result</span><strong className={`mt-1 block text-lg ${passed ? "text-green-700" : canSubmit ? "text-red-600" : "text-slate-400"}`}>{passed ? "PASS" : canSubmit ? "FAIL" : "PENDING"}</strong></div>
           </div>
         </div>
-        <EvidenceUpload uploadImage={async (file, metadata) => { const response = await uploadWeighingEvidenceApi(id, file, { ...metadata, testType: "repeatabilityTest" }); return response.evidence?.at(-1); }} />
+        <EvidenceUpload uploadImage={async (file, metadata) => { const response = await uploadWeighingEvidenceApi(id, file, { ...metadata, testType: "repeatabilityTest" }); return response.evidence?.at(-1); }} deleteImage={(item) => deleteWeighingEvidenceApi(id, { testType: "repeatabilityTest", url: item.url })} />
         <div className="repeatability-footer">
           <div>
             <strong>Variation: </strong>{variationRange === null ? "—" : variationRange.toFixed(4)} {config.instrument.unit}

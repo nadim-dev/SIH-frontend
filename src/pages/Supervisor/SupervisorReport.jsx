@@ -3,7 +3,7 @@ import { useOutletContext, useParams } from "react-router-dom";
 import { getGeneratedReportApi } from "../../api/instrumentApi";
 import laboratoryLogo from "../../assets/laboratory_logo.png";
 import benchScaleImage from "../../assets/bench_scale.png";
-import { AlertTriangle, BookOpenCheck, Check, CheckCircle2, FileText, Images, Thermometer, UserRound } from "lucide-react";
+import { AlertTriangle, BookOpenCheck, Check, CheckCircle2, FileText, Images, Mail, Phone, Thermometer, UserRound } from "lucide-react";
 
 export const SupervisorReport = () => {
   const { applicationId } = useParams();
@@ -121,7 +121,9 @@ export const SupervisorReport = () => {
   const applicantAddress = instrument.applicantAddress || instrument.address || "L.B.S. Marg, Vikhroli West, Mumbai, Maharashtra, India";
   const contactPerson = instrument.contactPerson || "Rajat Sharma";
   const applicantEmail = instrument.applicantEmail || `contact@${companySlug}.com`;
-  const laboratoryName = report.laboratoryName || "State Legal Metrology Laboratory";
+  const laboratory = report.laboratoryDetails || report.supervisorId?.labId || {};
+  const laboratoryName = laboratory.name || report.laboratoryName || "State Legal Metrology Laboratory";
+  const laboratoryAddress = [laboratory.address, laboratory.city, laboratory.state, laboratory.pinCode].filter(Boolean).join(", ");
   const kgValue = (value) => displayValue(value) === "—" ? "—" : `${displayValue(value)} kg`;
   const rows = [
     ["Weighing Performance", results.weighingTest?.passed],
@@ -136,11 +138,11 @@ export const SupervisorReport = () => {
   const verificationUrl = report.qrCode || `${window.location.origin}/verify-report/${report._id || report.evaluationId?._id || applicationNumber}`;
   const qrUrl = `https://quickchart.io/qr?size=180&text=${encodeURIComponent(verificationUrl)}`;
   return (
-    <main className="min-h-full bg-[#f8fafc] p-3 text-[10px] text-[#172033]">
+    <main className="report-print-page min-h-full bg-[#f8fafc] p-3 text-[10px] text-[#172033]">
       {currentUser?.role !== "TESTING OFFICER" && <div className="mx-auto mb-3 flex max-w-[1360px] justify-end print:hidden"><button type="button" onClick={printReport} className="rounded-md bg-blue-600 px-4 py-2 text-xs font-bold text-white">Print / Save PDF</button></div>}
-      <section className="mx-auto max-w-[1360px] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+      <section className="report-print-document mx-auto max-w-[1360px] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
         <header className="flex items-center justify-between gap-4 border-b border-slate-200 px-5 py-3">
-          <div className="flex items-center gap-3">
+          <div className="-ml-2 flex items-center gap-3">
             <img
               src={laboratoryLogo}
               alt="Government of Maharashtra"
@@ -150,13 +152,14 @@ export const SupervisorReport = () => {
               <h2 className="m-0 text-[1rem] font-extrabold text-[#172b55]">
                 {laboratoryName}
               </h2>
-              <p className="m-0 text-[9px] text-slate-500">
-                Government of Maharashtra
+              <p className="m-0 text-[10px] text-slate-600">
+                {laboratoryAddress || "Laboratory address unavailable"}
               </p>
-              <p className="m-0 text-[8px] text-slate-500">
-                Accurate Measures &nbsp;|&nbsp; Fair Trade &nbsp;|&nbsp;
-                Consumer Protection
-              </p>
+              <div className="mt-0.5 flex flex-wrap items-center gap-x-2.5 text-[9px] leading-3.5 text-slate-500">
+                {laboratory.officialEmail && <span className="inline-flex items-center gap-1 leading-3.5"><Mail size={10} className="shrink-0 text-blue-600" aria-hidden="true" /><span>{laboratory.officialEmail}</span></span>}
+                {laboratory.contactNumber && <span className="inline-flex items-center gap-1 leading-3.5"><Phone size={10} className="shrink-0 text-red-600" aria-hidden="true" /><span>{laboratory.contactNumber}</span></span>}
+                {!laboratory.officialEmail && !laboratory.contactNumber && <span>Laboratory contact details unavailable</span>}
+              </div>
             </div>
           </div>
           <div className="text-right">
@@ -309,7 +312,7 @@ const TestTable = ({ name, test }) => {
   })}</tbody></table></div> : <p className="m-0 px-3 py-3 text-[10px] text-slate-500">No detailed readings available.</p>}</div>;
 };
 
-const formatLabel = (value) => value === "stepIndex" || value === "step" || value === "label" ? "Test Position" : value === "correctedErrorEc" || value === "correctedError" ? "Corrected Error (kg)" : value === "deltaL" ? "Delta L (kg)" : value === "trueP" || value === "p" ? "P (kg)" : value === "mpeLimit" || value === "mpe" ? "MPE Limit (kg)" : value === "load" || value === "loadApplied" || value === "indicated" || value === "indication" ? `${value === "loadApplied" ? "Load Applied" : value === "indication" ? "Indication" : value.replace(/^./, (letter) => letter.toUpperCase())} (kg)` : value.replace(/([A-Z])/g, " $1").replace(/^./, (letter) => letter.toUpperCase());
+const formatLabel = (value) => value === "stepIndex" || value === "step" || value === "label" ? "Test Position" : value === "netLoad" ? "Test Load (kg)" : value === "correctedErrorEc" || value === "correctedError" ? "Corrected Error (kg)" : value === "deltaL" ? "Delta L (kg)" : value === "trueP" || value === "p" ? "P (kg)" : value === "mpeLimit" || value === "mpe" ? "MPE Limit (kg)" : value === "load" || value === "loadApplied" || value === "indicated" || value === "indication" ? `${value === "loadApplied" ? "Load Applied" : value === "indication" ? "Indication" : value.replace(/^./, (letter) => letter.toUpperCase())} (kg)` : value.replace(/([A-Z])/g, " $1").replace(/^./, (letter) => letter.toUpperCase());
 
 const FindingsAndEvaluation = ({ results, report }) => {
   const compliant = report.complianceStatus

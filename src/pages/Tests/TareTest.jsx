@@ -1,7 +1,6 @@
 import React from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { createNonComplianceReportApi, getTareTestConfigApi, submitTareTestApi } from "../../api/instrumentApi";
-import { uploadWeighingEvidenceApi } from "../../api/instrumentApi";
+import { createNonComplianceReportApi, getTareTestConfigApi, submitTareTestApi, uploadWeighingEvidenceApi, deleteWeighingEvidenceApi } from "../../api/instrumentApi";
 import EvidenceUpload from "../../components/EvidenceUpload";
 import NonComplianceReportModal from "../../components/NonComplianceReportModal";
 
@@ -71,7 +70,7 @@ export const TareTest = () => {
               <tr>
                 <th>Step</th>
                 <th>Tare Value</th>
-                <th>Net Load</th>
+                <th>Test Load</th>
                 <th>Indication</th>
                 <th>MPE Limit</th>
                 <th>Status</th>
@@ -114,7 +113,7 @@ export const TareTest = () => {
             </tbody>
           </table>
         </div>
-        <EvidenceUpload uploadImage={async (file, metadata) => { const response = await uploadWeighingEvidenceApi(id, file, { ...metadata, testType: "tareTest" }); return response.evidence?.at(-1); }} />
+        <EvidenceUpload uploadImage={async (file, metadata) => { const response = await uploadWeighingEvidenceApi(id, file, { ...metadata, testType: "tareTest" }); return response.evidence?.at(-1); }} deleteImage={(item) => deleteWeighingEvidenceApi(id, { testType: "tareTest", url: item.url })} />
         <div className="testing-footer">
           <div>
             <strong>Tare Conformance: </strong>

@@ -1,5 +1,5 @@
 import { Check, Copy, House, X } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom"; // If using react-router-dom
 import { RegisterInstrumentApi, extractRegistrationNameplateOcrApi } from "../api/instrumentApi";
 import Decimal from "decimal.js";
@@ -20,7 +20,7 @@ export const InstrumentRegister = () => {
     indicationType: "Digital",
     tareDevice: "Yes",
     tareType: "Subtractive",
-    maximumTare: "0",
+    maximumTare: "30",
     hasPrintingDevice: "No",
     accuracy: "",
     unit: "kg",
@@ -31,12 +31,24 @@ export const InstrumentRegister = () => {
   });
 
   const [file, setFile] = useState(null);
+  const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState("");
+  const [imagePreview, setImagePreview] = useState("");
   const [ocrFields, setOcrFields] = useState(null);
   const [ocrEditMode, setOcrEditMode] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState("");
   const [successDetails, setSuccessDetails] = useState(null);
+
+  useEffect(() => {
+    if (!file) {
+      setImagePreview("");
+      return undefined;
+    }
+    const previewUrl = URL.createObjectURL(file);
+    setImagePreview(previewUrl);
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [file]);
 
   const update = ({ target }) => {
     const { name, value } = target;
@@ -50,6 +62,7 @@ export const InstrumentRegister = () => {
     setServerError("");
     setOcrFields(null);
     setOcrEditMode(false);
+    setUploadedPhotoUrl("");
     if (selectedFile.size > MAX_SOURCE_IMAGE_SIZE) {
       setFile(null);
       setServerError("Image must be 5 MB or smaller.");
@@ -59,8 +72,9 @@ export const InstrumentRegister = () => {
       const compressedFile = await compressImage(selectedFile);
       setFile(compressedFile);
       setOcrLoading(true);
-              const result = await extractRegistrationNameplateOcrApi(compressedFile);
+      const result = await extractRegistrationNameplateOcrApi(compressedFile);
       setOcrFields(result?.data || result);
+      setUploadedPhotoUrl(result?.nameplatePhotoUrl || "");
       setOcrEditMode(false);
     } catch (error) {
       setFile(null);
@@ -73,6 +87,19 @@ export const InstrumentRegister = () => {
   };
 
   const applyOcrFields = (fields) => {
+    const instrumentTypeOptions = [
+      "Bench Scale",
+      "Platform Scale",
+      "Counter / Retail Scale",
+      "Precision / Analytical Balance",
+      "Crane / Hanging Scale",
+      "Weighbridge / Vehicle Scale",
+    ];
+    const normalizedInstrumentType = String(fields.instrumentType || "").trim().toLowerCase().replace(/\s+/g, " ");
+    const instrumentType = instrumentTypeOptions.find((option) => option.toLowerCase() === normalizedInstrumentType)
+      || instrumentTypeOptions.find((option) => normalizedInstrumentType.includes(option.toLowerCase()))
+      || instrumentTypeOptions.find((option) => option.toLowerCase().includes(normalizedInstrumentType))
+      || "";
     const numberAndUnit = (value) => {
       const match = String(value || "").match(/^\s*([\d.,]+)\s*([a-zA-Z]+)?/);
       return match ? { number: match[1].replace(/,/g, ""), unit: match[2] } : { number: "", unit: "" };
@@ -87,7 +114,7 @@ export const InstrumentRegister = () => {
       manufacturer: fields.manufacturer || previous.manufacturer,
       model: fields.modelNumber || previous.model,
       serial: fields.serialNumber || previous.serial,
-      instrumentType: fields.instrumentType || previous.instrumentType,
+      instrumentType: instrumentType || previous.instrumentType,
       accuracy: ["I", "II", "III", "IIII"].includes(classValue) ? `Class ${classValue}` : previous.accuracy,
       maxCapacity: max.number || previous.maxCapacity,
       minCapacity: min.number || previous.minCapacity,
@@ -213,18 +240,21 @@ const validationState = useMemo(() => {
       data.append("e", form.verificationStep);
       data.append("d", form.displayStep);
 
-      if (file) {
+      if (uploadedPhotoUrl) {
+        data.append("nameplatePhotoUrl", uploadedPhotoUrl);
+      } else if (file) {
         data.append("nameplatePhoto", file);
       }
 
       // Call API
       const response = await RegisterInstrumentApi(data);
-      const result = response?.data || response;
+      const result = response?.data?.instrumentId ? response.data : response;
+      const registeredInstrumentId = result?.instrumentId || result?.data?._id;
 
-      if (result?.instrumentId) {
+      if (registeredInstrumentId) {
         setSuccessDetails({
           applicationNumber: result.applicationNumber || "Application number unavailable",
-          instrumentId: result.instrumentId,
+          instrumentId: registeredInstrumentId,
           manufacturer: form.manufacturer,
           modelNumber: form.model,
           serialNumber: form.serial,
@@ -465,13 +495,33 @@ const validationState = useMemo(() => {
                 type="file"
                 accept="image/*"
                 onChange={handleFileChange}
-                required
               />
               <span className="upload-box">
                 ⌁ <b>{file ? file.name : "Choose image"}</b>
                 <small>{file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : "PNG, JPG up to 5 MB"}</small>
               </span>
             </label>
+            {imagePreview && (
+              <figure className="mt-3 flex items-start gap-3 rounded-lg border border-slate-200 bg-white p-2.5">
+                <a
+                  href={imagePreview}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Open nameplate image in a new tab"
+                  className="block shrink-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                >
+                  <img
+                    src={imagePreview}
+                    alt="Uploaded nameplate preview. Open full image in a new tab."
+                    className="h-24 w-32 rounded-md border border-slate-200 bg-slate-50 object-contain"
+                  />
+                </a>
+                <figcaption className="pt-1 text-xs text-slate-600">
+                  <span className="block font-semibold text-slate-800">Nameplate image preview</span>
+                  <span className="mt-1 block">Check that the instrument details are clear and readable.</span>
+                </figcaption>
+              </figure>
+            )}
             {file && <p role="status" className="mt-2 text-xs font-semibold text-emerald-700">{ocrLoading ? "Uploading nameplate and extracting data..." : ocrFields ? "Nameplate uploaded. Review the extracted values below." : "Nameplate image ready."}</p>}
           </div>
           {ocrFields && (

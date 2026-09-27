@@ -193,8 +193,6 @@ function GroupPhotoUpload({
   fileUrl,
   reuse,
   uploading,
-  onOcr,
-  ocrBusy,
 }) {
   const inputRef = useRef(null);
 
@@ -214,9 +212,6 @@ function GroupPhotoUpload({
           disabled={!fileUrl}
         >
           <Eye size={14} /> View
-        </button>
-        <button type="button" onClick={onOcr} disabled={ocrBusy || !fileUrl} className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50 disabled:opacity-50">
-          {ocrBusy ? "Reading..." : "Read with OCR"}
         </button>
       </div>
     );
@@ -374,8 +369,6 @@ function SectionCard({
   photos,
   onPhotoUpload,
   uploadingPhoto,
-  onOcr,
-  ocrBusy,
 }) {
   const visibleItems = section.items.filter((item) => {
     if (item.key === "tareDevice") return instrument.tareDevice === "Yes";
@@ -403,8 +396,6 @@ function SectionCard({
           fileUrl={photos[section.photoKey]?.url}
           onUpload={onPhotoUpload}
           uploading={uploadingPhoto === section.photoKey}
-          onOcr={section.photoKey === "nameplate" ? onOcr : undefined}
-          ocrBusy={ocrBusy}
           reuse={section.reusePhoto}
         />
       )}
@@ -703,8 +694,6 @@ export default function GeneralExamination() {
               photos={photos}
               onPhotoUpload={handlePhotoUpload}
               uploadingPhoto={uploadingPhoto}
-              onOcr={() => runNameplateOcr()}
-              ocrBusy={ocrBusy}
             />
           ))}
           </div>

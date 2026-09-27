@@ -88,7 +88,7 @@ export default function SupervisorLaboratoryProfile() {
   if (loading) return <div className="rounded-lg border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">Loading laboratory profile…</div>;
   if (!laboratory && error) return <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>;
 
-  return <form onSubmit={saveProfile} className="space-y-3">
+  return <form onSubmit={saveProfile} className="space-y-3 font-sans [&_label]:!font-sans [&_input]:!font-sans [&_textarea]:!font-sans">
     {error && <div role="alert" className="rounded-md border border-red-200 bg-red-50 px-3 py-2.5 text-xs font-semibold text-red-700">{error}</div>}
     {notice && <div role="status" className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs font-semibold text-emerald-700"><Check size={15} />{notice}</div>}
 

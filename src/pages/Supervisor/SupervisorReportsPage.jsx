@@ -77,7 +77,7 @@ export const SupervisorReportsPage = () => {
                 {visibleReports.map((report, index) => (
                   <tr key={report._id} className="border-t border-slate-200">
                     <td className="p-3 font-semibold text-slate-500">{index + 1}</td>
-                    <td className="p-3 font-bold text-blue-700">
+                    <td className="p-3 font-bold text-black">
                       NAWI/TR/{(report.evaluationId?.applicationNumber || "—").replace("NAWI-", "")}
                       <div className="hidden">
                       <div className="flex items-center gap-2">

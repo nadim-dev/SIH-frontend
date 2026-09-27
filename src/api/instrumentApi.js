@@ -73,6 +73,8 @@ export const uploadWeighingEvidenceApi = (instrumentId, file, metadata = {}) => 
   if (metadata.longitude !== null && metadata.longitude !== undefined) formData.append("longitude", metadata.longitude);
   return axiosWithCreds.post(`/api/instruments/${instrumentId}/weighing-test/evidence`, formData);
 };
+export const deleteWeighingEvidenceApi = (instrumentId, payload) =>
+  axiosWithCreds.delete(`/api/instruments/${instrumentId}/weighing-test/evidence`, { data: payload });
 export const getRepeatabilityTestConfigApi = (instrumentId) =>
   axiosWithCreds.get(`/api/instruments/${instrumentId}/repeatability-test/config`);
 export const getEccentricityTestConfigApi = (instrumentId) =>

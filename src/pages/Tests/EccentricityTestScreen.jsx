@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { createNonComplianceReportApi, getEccentricityTestConfigApi, submitEccentricityObservationsApi } from "../../api/instrumentApi";
+import { createNonComplianceReportApi, getEccentricityTestConfigApi, submitEccentricityObservationsApi, uploadWeighingEvidenceApi, deleteWeighingEvidenceApi } from "../../api/instrumentApi";
 import NonComplianceReportModal from "../../components/NonComplianceReportModal";
 import EvidenceUpload from "../../components/EvidenceUpload";
-import { uploadWeighingEvidenceApi } from "../../api/instrumentApi";
 
 
 export const EccentricityTestScreen = () => {
@@ -188,7 +187,7 @@ export const EccentricityTestScreen = () => {
           </div>
         </div>
 
-        <EvidenceUpload uploadImage={async (file, metadata) => { const response = await uploadWeighingEvidenceApi(id, file, { ...metadata, testType: "eccentricityTest" }); return response.evidence?.at(-1); }} />
+        <EvidenceUpload uploadImage={async (file, metadata) => { const response = await uploadWeighingEvidenceApi(id, file, { ...metadata, testType: "eccentricityTest" }); return response.evidence?.at(-1); }} deleteImage={(item) => deleteWeighingEvidenceApi(id, { testType: "eccentricityTest", url: item.url })} />
 
         <div className="eccentricity-footer">
           <div className="conformance">

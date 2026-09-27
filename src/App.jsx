@@ -43,6 +43,8 @@ import { AddLaboratory, ManageLabs } from "./pages/Admin/ManageLabs";
 import { AdminUsers } from "./pages/Admin/AdminUsers";
 import ProfilePage from "./pages/ProfilePage";
 import SupervisorLaboratoryProfile from "./pages/SupervisorLaboratoryProfile";
+import { AssistantPage } from "./pages/AssistantPage";
+
 
 function useAuth() {
   return useContext(AuthContext);
@@ -114,6 +116,10 @@ const router = createBrowserRouter([
           {
             path: "/testing-person/reports",
             element: <TestingPersonReports />,
+          },
+          {
+            path: "/testing-person/assistant",
+            element: <AssistantPage/>,
           },
           {
             path: "/testing-person/instruments",

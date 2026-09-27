@@ -26,7 +26,7 @@ const fields = [
     key: "pressure",
     label: "Barometric Pressure",
     unit: "hPa",
-    value: "",
+    value: "970",
     range: "Typical range: 950 – 1050 hPa",
     icon: Gauge,
     iconClass: "bg-[#F0E7FF] text-[#7B2FE8]",

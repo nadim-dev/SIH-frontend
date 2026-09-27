@@ -1,4 +1,4 @@
-import { AlertTriangle, Bell, Building2, ChevronRight, ClipboardList, FileClock, FileText, House, Users } from "lucide-react";
+import { AlertTriangle, Bell, Bot, Building2, ChevronRight, ClipboardList, FileClock, FileText, House, Users } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useContext } from "react";
 import nawiIcon from "../assets/nawi-icon.png";
@@ -7,6 +7,7 @@ import getInitials from "../utils/getInitial";
 const navigation = [
   { label: "Dashboard", to: "/testing-person/dashboard", icon: House },
   { label: "Reports", to: "/testing-person/reports", icon: FileText },
+  { label: "NAWI Assistant", to: "/testing-person/assistant", icon: Bot },
   { label: "Notifications", to: "/testing-person/notifications", icon: Bell },
 ];
 

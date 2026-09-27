@@ -1,5 +1,5 @@
 import { useContext, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
 import leftLoginImage from "../assets/left_login_image.png";
 import { loginApi } from "../api/authApi";
@@ -49,6 +49,11 @@ export const LoginPage = () => {
   };
   const field =
     "flex h-[42px] items-center rounded-md border-[1.5px] border-sky-400 bg-white px-3 text-slate-500 shadow-[0_0_0_1px_rgba(88,170,242,0.12)] focus-within:border-sky-600 focus-within:shadow-[0_0_0_3px_rgba(35,137,223,0.16)]";
+  const demoAccounts = [
+    { role: "Tester", email: "tester@gmail.com" },
+    { role: "Supervisor", email: "supervisor@gmail.com" },
+    { role: "Admin", email: "admin@gmail.com" },
+  ];
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#f6f8fb] p-6 max-[620px]:p-0">
       <div className="flex h-[730px] w-[1440px] max-w-full overflow-hidden rounded-lg bg-white shadow-[0_18px_42px_rgba(16,47,98,0.18)] max-[1440px]:h-[min(730px,calc(100vh-60px))] max-[620px]:min-h-screen max-[620px]:h-auto max-[620px]:flex-col">
@@ -122,13 +127,29 @@ export const LoginPage = () => {
                   </button>
                 </div>
               </label>
-              <div className="-mt-2 mb-2 flex justify-start">
-                <Link
-                  className="text-[10px] text-blue-700 no-underline hover:underline"
-                  to="/login"
-                >
-                  Forgot password?
-                </Link>
+              <div className="mb-3.5" aria-label="Choose account role">
+                <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+                  Quick sign in as
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                {demoAccounts.map(({ role, email }) => (
+                  (() => {
+                    const selected = form.email === email;
+                    return (
+                  <button
+                    key={role}
+                    className={`flex h-9 items-center justify-center gap-1.5 rounded-md border text-[11px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 focus-visible:ring-offset-1 ${selected ? "border-blue-300 bg-blue-50 text-blue-800 shadow-[inset_0_0_0_1px_rgba(59,130,246,0.08)]" : "border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-slate-50 hover:text-blue-700"}`}
+                    type="button"
+                    onClick={() => setForm((current) => ({ ...current, email }))}
+                    aria-pressed={selected}
+                  >
+                    <span className={`h-1.5 w-1.5 rounded-full ${selected ? "bg-blue-500" : "bg-slate-300"}`} />
+                    {role}
+                  </button>
+                    );
+                  })()
+                ))}
+                </div>
               </div>
               <button
                 className="h-9 w-full rounded cursor-pointer  bg-[#096abd] text-[13px] font-bold text-white shadow hover:bg-[#075ca6] disabled:opacity-70"
