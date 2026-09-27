@@ -10,11 +10,12 @@ import {
   ShieldAlert,
   X,
 } from "lucide-react";
-import { useOutletContext } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { getNonComplianceReportsApi, reviewNonComplianceReportApi } from "../../api/instrumentApi";
 
 export const NonComplianceReportPage = () => {
   const { setHeaderContent } = useOutletContext();
+  const navigate = useNavigate();
   const [reports, setReports] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [search, setSearch] = useState("");
@@ -33,7 +34,7 @@ export const NonComplianceReportPage = () => {
     const loadReports = async () => {
       try {
         const response = await getNonComplianceReportsApi();
-        const rows = response.data || [];
+        const rows = response.data?.data || response.data?.reports || response.data || [];
         setReports(rows);
         setSelectedId(null);
       } catch (requestError) {
@@ -88,6 +89,24 @@ export const NonComplianceReportPage = () => {
     }
   };
 
+  const handleApproveNcr = async () => {
+    if (!selected || reviewing) return;
+    setReviewing(true);
+    setError("");
+    try {
+      const response = await reviewNonComplianceReportApi(selected._id, "APPROVED", "NCR reviewed and non-compliance report generated.");
+      const data = response.data?.data || {};
+      setReports((current) => current.map((report) => report._id === selected._id ? { ...report, ...data, status: "APPROVED", reportId: data.reportId || response.data?.generatedReportId } : report));
+      const applicationNumber = response.data?.applicationNumber || selected.evaluationId?.applicationNumber;
+      setSelectedId(null);
+      if (applicationNumber) navigate(`/supervisor/reports/${encodeURIComponent(applicationNumber)}`);
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || requestError.message || "Unable to approve the NCR and generate its report.");
+    } finally {
+      setReviewing(false);
+    }
+  };
+
   return (
     <section className="space-y-5">
       <div className="grid grid-cols-1 gap-3 min-[701px]:grid-cols-3">
@@ -112,15 +131,7 @@ export const NonComplianceReportPage = () => {
       </div>
       <section className="rounded-xl border border-slate-200 bg-white shadow-[0_6px_16px_rgba(23,32,51,0.04)]">
         <div className="border-b border-slate-200 p-5">
-          <div>
-            <h2 className="m-0 text-xl font-bold text-[#0f1b39]">
-              Review Reports
-            </h2>
-            <p className="mt-1 text-xs text-slate-500">
-              Inspect evidence and decide the next testing step.
-            </p>
-          </div>
-          <div className="mt-4 flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <label className="relative min-w-[210px] flex-1">
               <Search
                 size={15}
@@ -190,7 +201,7 @@ export const NonComplianceReportPage = () => {
               >
                 <X size={17} />
               </button>
-              <ReportDetails report={selected} onResumeTesting={handleResumeTesting} reviewing={reviewing} />
+              <ReportDetails report={selected} onResumeTesting={handleResumeTesting} onApprove={handleApproveNcr} reviewing={reviewing} />
             </div>
           </div>
         )}
@@ -263,7 +274,7 @@ function ReportListItem({ report, active, onClick }) {
     </button>
   );
 }
-function ReportDetails({ report, onResumeTesting, reviewing }) {
+function ReportDetails({ report, onResumeTesting, onApprove, reviewing }) {
   const instrument = report.instrumentId || {};
   return (
     <article className="p-5">
@@ -361,9 +372,11 @@ function ReportDetails({ report, onResumeTesting, reviewing }) {
           </button>
           <button
             type="button"
+            onClick={onApprove}
+            disabled={reviewing}
             className="inline-flex cursor-pointer items-center gap-1.5 rounded-md bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700"
           >
-            <Check size={15} /> Approve NCR
+            <Check size={15} /> {reviewing ? "Approving..." : "Approve NCR & Generate Report"}
           </button>
         </div>}
       </div>

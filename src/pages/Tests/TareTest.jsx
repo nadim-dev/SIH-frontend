@@ -1,8 +1,9 @@
 import React from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { getTareTestConfigApi, submitTareTestApi } from "../../api/instrumentApi";
+import { createNonComplianceReportApi, getTareTestConfigApi, submitTareTestApi } from "../../api/instrumentApi";
 import { uploadWeighingEvidenceApi } from "../../api/instrumentApi";
 import EvidenceUpload from "../../components/EvidenceUpload";
+import NonComplianceReportModal from "../../components/NonComplianceReportModal";
 
 export const TareTest = () => {
   const { id } = useParams();
@@ -13,6 +14,7 @@ export const TareTest = () => {
   const [error, setError] = React.useState("");
   const [indications, setIndications] = React.useState({});
   const [submitting, setSubmitting] = React.useState(false);
+  const [showNcrForm, setShowNcrForm] = React.useState(false);
   const decimalText = (value) =>
     value && typeof value === "object"
       ? (value.$numberDecimal ?? String(value))
@@ -39,6 +41,7 @@ export const TareTest = () => {
   const allPointsPassed = Boolean(
     config?.points?.length && passedPoints.length === config.points.length,
   );
+  const failedItems = (config?.points || []).filter((point) => hasReading(point) && !pointPassed(point)).map((point) => ({ key: `tare-${point.step}`, label: `Tare test step ${point.step} failed (error ${pointError(point)?.toFixed(4)} ${config.instrument?.unit}, MPE ±${decimalText(point.mpeLimit)} ${config.instrument?.unit})` }));
   const submit = async () => { setSubmitting(true); try { await submitTareTestApi(id, { readings: config.points.map((point) => ({ indication: Number(indications[point.step]) })) }); const targetApplication = applicationNumber || config.applicationNumber; navigate(targetApplication ? `/testing/${targetApplication}/test-execution` : `/testing/${id}/test-execution`); } catch (err) { setError(err.response?.data?.message || "Failed to submit tare test."); } finally { setSubmitting(false); } };
 
   React.useEffect(() => {
@@ -128,7 +131,8 @@ export const TareTest = () => {
           <button
             type="button"
             className="cursor-pointer rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
-            disabled={!enteredPoints.some((point) => !pointPassed(point))}
+            disabled={!failedItems.length || enteredPoints.length !== config.points.length || submitting}
+            onClick={() => setShowNcrForm(true)}
           >
             Generate NCR Report
           </button>
@@ -143,6 +147,18 @@ export const TareTest = () => {
           </button>
         </div>
       </section>
+      <NonComplianceReportModal
+        open={showNcrForm}
+        instrumentId={id}
+        testType="TARE"
+        failedItems={failedItems}
+        onClose={() => setShowNcrForm(false)}
+        onSubmit={async (payload) => {
+          await submitTareTestApi(id, { readings: config.points.map((point) => ({ indication: Number(indications[point.step]) })) });
+          return createNonComplianceReportApi({ ...payload, testType: "TARE" });
+        }}
+        onSubmitted={() => navigate("/testing-person/dashboard")}
+      />
     </main>
   );
 };

@@ -2,8 +2,10 @@
 .nawi-sidebar{position:fixed;inset:0 auto 0 0;z-index:20;overflow-y:auto}
 .nawi-main-column{margin-left:240px;min-height:100vh}
 .nawi-sidebar{background:#0F1B33;color:#F8FAFC}
-.nawi-brand{height:132px;margin-bottom:22px}
-.nawi-brand img{width:176px;height:116px}
+.nawi-brand{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:8px;height:82px;margin-bottom:10px;padding-block:0}
+.nawi-brand img{width:78px;height:68px;object-fit:contain}
+.nawi-brand span{color:#f8fafc;font-size:18px;font-weight:800;letter-spacing:.25px;line-height:1;white-space:nowrap}
+.nawi-brand span b{color:#3b82f6;font-weight:800}
 .nawi-nav{gap:8px}
 .nawi-nav-link{min-height:48px;gap:16px;padding:0 16px;font-size:14px}
 .nawi-nav-link{color:#F8FAFC}
@@ -13,8 +15,8 @@
 .nawi-sidebar-footer{border-top-color:#29415d}
 .nawi-nav-link svg{width:19px;height:19px}
 .nawi-sidebar-footer{padding-top:18px}
-.nawi-sidebar-profile{display:flex;align-items:center;gap:11px;min-height:74px;padding:10px 11px;border:1px solid #2563EB;border-radius:15px;background:#111C33;color:#fff;text-decoration:none;box-shadow:0 8px 18px #0f1b3333}
-.nawi-sidebar-profile-avatar{width:48px;height:48px;flex:none;display:grid;place-items:center;border-radius:50%;background:#F8FAFC;color:#334155;font-size:16px;font-weight:800;letter-spacing:.3px}
+.nawi-sidebar-profile{display:flex;align-items:center;gap:9px;min-height:66px;padding:7px 9px;border:1px solid #2563EB;border-radius:13px;background:#111C33;color:#fff;text-decoration:none;box-shadow:0 5px 12px #0f1b3328}
+.nawi-sidebar-profile-avatar{width:42px;height:42px;flex:none;display:grid;place-items:center;border-radius:50%;background:#F8FAFC;color:#334155;font-size:15px;font-weight:800;letter-spacing:.3px}
 .nawi-sidebar-profile-copy{min-width:0;display:flex;flex:1;flex-direction:column;gap:4px}
 .nawi-sidebar-profile-copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px;line-height:1.1}
 .nawi-sidebar-profile-copy span{font-size:12px;font-weight:500;color:#E5E7EB}
@@ -29,4 +31,4 @@
 .nawi-user-details{font-size:12px}
 .nawi-user-details span{font-size:9px}
 .nawi-content{padding:30px;background:#F8FAFC}
-@media(max-width:650px){.nawi-sidebar{width:68px;padding-inline:7px}.nawi-brand{height:94px}.nawi-brand img{width:54px;height:82px}.nawi-main-column{margin-left:68px}.nawi-header{height:64px;padding:0 13px}.nawi-government-copy{display:none}.nawi-content{padding:14px}.nawi-sidebar-profile{justify-content:center;padding:8px;border-radius:16px}.nawi-sidebar-profile-copy,.nawi-sidebar-profile>svg{display:none}.nawi-sidebar-profile-avatar{width:42px;height:42px}}
+@media(max-width:650px){.nawi-sidebar{width:68px;padding-inline:7px}.nawi-brand{height:62px;margin-bottom:10px;gap:0;flex-direction:column}.nawi-brand img{width:36px;height:32px}.nawi-brand span{font-size:6px;letter-spacing:.5px}.nawi-main-column{margin-left:68px}.nawi-header{height:64px;padding:0 13px}.nawi-government-copy{display:none}.nawi-content{padding:14px}.nawi-sidebar-profile{justify-content:center;padding:8px;border-radius:16px}.nawi-sidebar-profile-copy,.nawi-sidebar-profile>svg{display:none}.nawi-sidebar-profile-avatar{width:42px;height:42px}}

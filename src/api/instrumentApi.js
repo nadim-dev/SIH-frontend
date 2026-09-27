@@ -3,13 +3,23 @@ import { axiosWithCreds,axiosWithoutCreds } from "./axiosInstance";
 export const RegisterInstrumentApi=(data)=>
     axiosWithCreds.post("/api/instruments/register",data)
 
+export const extractRegistrationNameplateOcrApi = (file) => {
+  const formData = new FormData();
+  formData.append("photo", file);
+  return axiosWithCreds.post("/api/instruments/nameplate-ocr", formData);
+};
+
 export const InstrumentEvaluationApi = (applicationId) =>
     axiosWithCreds.get("/api/instrument/${applicationId}/evaluation");
 
 export const getMyEvaluationsApi = (officerId) =>
     axiosWithCreds.get("/api/instruments/my-evaluations", { params: officerId ? { officerId } : undefined });
+export const getTestingDashboardSummaryApi = (officerId) =>
+  axiosWithCreds.get("/api/instruments/testing-dashboard-summary", { params: officerId ? { officerId } : undefined });
 export const getSupervisorEvaluationsApi = (labId) =>
   axiosWithCreds.get("/api/instruments/supervisor-evaluations", { params: labId ? { labId } : undefined });
+export const getSupervisorDashboardSummaryApi = () =>
+  axiosWithCreds.get("/api/instruments/supervisor-dashboard-summary");
 export const reviewSupervisorEvaluationApi = (applicationId, decision, remarks = "") =>
   axiosWithCreds.patch(`/api/instruments/${encodeURIComponent(applicationId)}/supervisor-review`, { decision, remarks });
 export const getGeneratedReportApi = (applicationId) =>
@@ -45,6 +55,11 @@ export const uploadGeneralExaminationPhotoApi = (instrumentId, photoKey, file) =
   formData.append('photoKey', photoKey);
   formData.append('photo', file);
   return axiosWithoutCreds.post(`/api/instruments/${instrumentId}/general-examination/photo`, formData);
+};
+export const extractNameplateOcrApi = (instrumentId, file) => {
+  const formData = new FormData();
+  formData.append("photo", file);
+  return axiosWithCreds.post(`/api/instruments/${instrumentId}/general-examination/nameplate-ocr`, formData);
 };
 export const submitGeneralExaminationApi = (instrumentId, payload) =>
   axiosWithCreds.post(`/api/instruments/${instrumentId}/general-examination/complete`, { instrumentId, ...payload });
@@ -96,6 +111,8 @@ export const createNonComplianceReportApi = (payload) => {
   formData.append("instrumentId", payload.instrumentId);
   formData.append("remarks", payload.remarks);
   formData.append("failedItems", JSON.stringify(payload.failedItems));
+  if (payload.testType) formData.append("testType", payload.testType);
+  if (payload.testData) formData.append("testData", JSON.stringify(payload.testData));
   payload.evidence.forEach((file) => formData.append("evidence", file));
   return axiosWithCreds.post("/api/instruments/ncr", formData);
 };

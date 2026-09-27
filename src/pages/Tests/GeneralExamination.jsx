@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useNavigate, useOutletContext, useParams, useSearchParams } from "react-router-dom";
-import {getInstrumentForTestingApi,uploadGeneralExaminationPhotoApi,createNonComplianceReportApi,getLatestNonComplianceReportApi,submitGeneralExaminationApi} from "../../api/instrumentApi.js";
+import {getInstrumentForTestingApi,uploadGeneralExaminationPhotoApi,extractNameplateOcrApi,createNonComplianceReportApi,getLatestNonComplianceReportApi,submitGeneralExaminationApi} from "../../api/instrumentApi.js";
 import { getInstrumentImage } from "../../utils/instrumentImage.js";
 import { compressImage } from "../../utils/compressImage.js";
 import { Eye } from "lucide-react";
@@ -193,6 +193,8 @@ function GroupPhotoUpload({
   fileUrl,
   reuse,
   uploading,
+  onOcr,
+  ocrBusy,
 }) {
   const inputRef = useRef(null);
 
@@ -212,6 +214,9 @@ function GroupPhotoUpload({
           disabled={!fileUrl}
         >
           <Eye size={14} /> View
+        </button>
+        <button type="button" onClick={onOcr} disabled={ocrBusy || !fileUrl} className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50 disabled:opacity-50">
+          {ocrBusy ? "Reading..." : "Read with OCR"}
         </button>
       </div>
     );
@@ -369,6 +374,8 @@ function SectionCard({
   photos,
   onPhotoUpload,
   uploadingPhoto,
+  onOcr,
+  ocrBusy,
 }) {
   const visibleItems = section.items.filter((item) => {
     if (item.key === "tareDevice") return instrument.tareDevice === "Yes";
@@ -396,6 +403,8 @@ function SectionCard({
           fileUrl={photos[section.photoKey]?.url}
           onUpload={onPhotoUpload}
           uploading={uploadingPhoto === section.photoKey}
+          onOcr={section.photoKey === "nameplate" ? onOcr : undefined}
+          ocrBusy={ocrBusy}
           reuse={section.reusePhoto}
         />
       )}
@@ -447,6 +456,8 @@ export default function GeneralExamination() {
   const [textValues, setTextValues] = useState({});
   const [photos, setPhotos] = useState({});
   const [uploadingPhoto, setUploadingPhoto] = useState(null);
+  const [ocrReview, setOcrReview] = useState(null);
+  const [ocrBusy, setOcrBusy] = useState(false);
   const [showNcrForm, setShowNcrForm] = useState(false);
   const [remarks, setRemarks] = useState("");
   const [ncrEvidence, setNcrEvidence] = useState([]);
@@ -581,11 +592,42 @@ export default function GeneralExamination() {
         ...prev,
         [photoKey]: { name: compressedFile.name, url: response.url },
       }));
+      if (photoKey === "nameplate") await runNameplateOcr(compressedFile);
     } catch (error) {
       alert(error.message || "Failed to upload photo.");
     } finally {
       setUploadingPhoto(null);
     }
+  };
+
+  const runNameplateOcr = async (file = null) => {
+    setOcrBusy(true);
+    try {
+      let sourceFile = file;
+      if (!sourceFile) {
+        if (!photos.nameplate?.url) throw new Error("Upload the nameplate photo first.");
+        const response = await fetch(photos.nameplate.url);
+        if (!response.ok) throw new Error("Could not load the saved nameplate image.");
+        sourceFile = new File([await response.blob()], "nameplate.jpg", { type: "image/jpeg" });
+      }
+      const response = await extractNameplateOcrApi(instrumentId, sourceFile);
+      setOcrReview(response?.data || response);
+    } catch (error) {
+      alert(error.message || "Could not read the nameplate.");
+    } finally {
+      setOcrBusy(false);
+    }
+  };
+
+  const confirmOcrFields = (fields) => {
+    const identification = {
+      accuracyClass: fields.accuracyClass,
+      maxMin: [fields.max && `Max ${fields.max}`, fields.min && `Min ${fields.min}`, fields.verificationScaleInterval && `e ${fields.verificationScaleInterval}`, fields.actualScaleInterval && `d ${fields.actualScaleInterval}`].filter(Boolean).join("; "),
+      serialNumber: fields.serialNumber,
+      softwareId: fields.softwareId,
+    };
+    setTextValues((previous) => ({ ...previous, ...Object.fromEntries(Object.entries(identification).filter(([, value]) => value)) }));
+    setOcrReview(null);
   };
 
   const handleGenerateNCR = () => {
@@ -661,6 +703,8 @@ export default function GeneralExamination() {
               photos={photos}
               onPhotoUpload={handlePhotoUpload}
               uploadingPhoto={uploadingPhoto}
+              onOcr={() => runNameplateOcr()}
+              ocrBusy={ocrBusy}
             />
           ))}
           </div>
@@ -708,10 +752,34 @@ export default function GeneralExamination() {
           open={showNcrForm}
           instrumentId={instrumentId}
           failedItems={failedItems}
+          testType="GENERAL_EXAMINATION"
+          testData={{ checklist: sections.flatMap((section) => section.items.filter((item) => values[item.key]).map((item) => ({ key: item.key, label: item.label, result: values[item.key] === "fail" ? "FAIL" : values[item.key] === "na" ? "NA" : "PASS", textValue: textValues[item.key] || "" }))), photos: Object.fromEntries(Object.entries(photos).map(([key, photo]) => [key, photo.url || photo])) }}
           onClose={() => setShowNcrForm(false)}
           onSubmit={createNonComplianceReportApi}
-          onSubmitted={() => { setNcrStatus("PENDING"); setNcrSubmitted(true); setShowNcrForm(false); }}
+          onSubmitted={() => { setNcrStatus("PENDING"); setNcrSubmitted(true); navigate("/testing-person/dashboard"); }}
         />
+
+        {ocrReview && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/50 p-4">
+            <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white p-5 shadow-xl">
+              <div className="flex items-start justify-between border-b border-slate-200 pb-3">
+                <div><h2 className="text-lg font-bold text-slate-900">Verify nameplate data</h2><p className="mt-1 text-xs text-slate-500">Check each value against the photo. Edit any OCR mistakes, then confirm to fill the form.</p></div>
+                <button type="button" onClick={() => setOcrReview(null)} className="rounded-md px-2 text-xl text-slate-500">×</button>
+              </div>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {Object.entries(ocrReview).map(([key, value]) => (
+                  <label key={key} className="text-xs font-semibold capitalize text-slate-700">{key.replace(/([A-Z])/g, " $1")}
+                    <input value={value} onChange={(event) => setOcrReview((prev) => ({ ...prev, [key]: event.target.value }))} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm font-normal" />
+                  </label>
+                ))}
+              </div>
+              <div className="mt-5 flex justify-end gap-2 border-t border-slate-100 pt-4">
+                <button type="button" onClick={() => setOcrReview(null)} className="rounded-md border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700">Cancel</button>
+                <button type="button" onClick={() => confirmOcrFields(ocrReview)} className="rounded-md bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700">Confirm and fill form</button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {false && showNcrForm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4">

@@ -1,7 +1,7 @@
 import { Check, Copy, House, X } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom"; // If using react-router-dom
-import { RegisterInstrumentApi } from "../api/instrumentApi";
+import { RegisterInstrumentApi, extractRegistrationNameplateOcrApi } from "../api/instrumentApi";
 import Decimal from "decimal.js";
 import { compressImage } from "../utils/compressImage";
 import "./instrumentRegistrationCompact.css";
@@ -31,6 +31,9 @@ export const InstrumentRegister = () => {
   });
 
   const [file, setFile] = useState(null);
+  const [ocrFields, setOcrFields] = useState(null);
+  const [ocrEditMode, setOcrEditMode] = useState(false);
+  const [ocrLoading, setOcrLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState("");
   const [successDetails, setSuccessDetails] = useState(null);
@@ -45,17 +48,53 @@ export const InstrumentRegister = () => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
     setServerError("");
+    setOcrFields(null);
+    setOcrEditMode(false);
     if (selectedFile.size > MAX_SOURCE_IMAGE_SIZE) {
       setFile(null);
       setServerError("Image must be 5 MB or smaller.");
       return;
     }
     try {
-      setFile(await compressImage(selectedFile));
+      const compressedFile = await compressImage(selectedFile);
+      setFile(compressedFile);
+      setOcrLoading(true);
+              const result = await extractRegistrationNameplateOcrApi(compressedFile);
+      setOcrFields(result?.data || result);
+      setOcrEditMode(false);
     } catch (error) {
       setFile(null);
-      setServerError(error.message);
+      setOcrFields(null);
+      setServerError(error.message || "Could not read this nameplate.");
+    } finally {
+      setOcrLoading(false);
+      e.target.value = "";
     }
+  };
+
+  const applyOcrFields = (fields) => {
+    const numberAndUnit = (value) => {
+      const match = String(value || "").match(/^\s*([\d.,]+)\s*([a-zA-Z]+)?/);
+      return match ? { number: match[1].replace(/,/g, ""), unit: match[2] } : { number: "", unit: "" };
+    };
+    const max = numberAndUnit(fields.max);
+    const min = numberAndUnit(fields.min);
+    const verificationStep = numberAndUnit(fields.verificationScaleInterval);
+    const displayStep = numberAndUnit(fields.actualScaleInterval);
+    const classValue = String(fields.accuracyClass || "").replace(/^Class\s*/i, "").trim().toUpperCase();
+    setForm((previous) => ({
+      ...previous,
+      manufacturer: fields.manufacturer || previous.manufacturer,
+      model: fields.modelNumber || previous.model,
+      serial: fields.serialNumber || previous.serial,
+      instrumentType: fields.instrumentType || previous.instrumentType,
+      accuracy: ["I", "II", "III", "IIII"].includes(classValue) ? `Class ${classValue}` : previous.accuracy,
+      maxCapacity: max.number || previous.maxCapacity,
+      minCapacity: min.number || previous.minCapacity,
+      verificationStep: verificationStep.number || previous.verificationStep,
+      displayStep: displayStep.number || previous.displayStep,
+      unit: fields.unit || max.unit || min.unit || verificationStep.unit || displayStep.unit || previous.unit,
+    }));
   };
 
   // 1. Live Metrological Calculation Engine (Client-side Table 3 feedback)
@@ -180,11 +219,12 @@ const validationState = useMemo(() => {
 
       // Call API
       const response = await RegisterInstrumentApi(data);
+      const result = response?.data || response;
 
-      if (response && response.instrumentId) {
+      if (result?.instrumentId) {
         setSuccessDetails({
-          applicationNumber: response.applicationNumber || response.data?.applicationNumber || "Application number unavailable",
-          instrumentId: response.instrumentId,
+          applicationNumber: result.applicationNumber || "Application number unavailable",
+          instrumentId: result.instrumentId,
           manufacturer: form.manufacturer,
           modelNumber: form.model,
           serialNumber: form.serial,
@@ -192,7 +232,7 @@ const validationState = useMemo(() => {
         });
       }
     } catch (err) {
-      setServerError(err.response?.data?.error || err.message || "Failed to register instrument.");
+      setServerError(err.data?.error || err.data?.message || err.message || "Failed to register instrument.");
     } finally {
       setLoading(false);
     }
@@ -432,7 +472,29 @@ const validationState = useMemo(() => {
                 <small>{file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : "PNG, JPG up to 5 MB"}</small>
               </span>
             </label>
+            {file && <p role="status" className="mt-2 text-xs font-semibold text-emerald-700">{ocrLoading ? "Uploading nameplate and extracting data..." : ocrFields ? "Nameplate uploaded. Review the extracted values below." : "Nameplate image ready."}</p>}
           </div>
+          {ocrFields && (
+            <div className="ocr-overlay fixed inset-0 z-[60] grid place-items-center p-4">
+              <section role="dialog" aria-modal="true" aria-labelledby="nameplate-review-title" className="ocr-dialog max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl">
+                <header className="ocr-dialog-header flex items-start justify-between border-b pb-3">
+                  <div><span className="ocr-eyebrow">NAMEPLATE SCAN · REVIEW</span><h2 id="nameplate-review-title" className="text-lg font-bold text-slate-900">Verify nameplate data</h2><p className="mt-1 text-xs text-slate-500">Review the extracted information, edit any values that need correction, then confirm.</p></div>
+                  <button type="button" aria-label="Close" onClick={() => setOcrFields(null)} className="rounded-md px-2 text-xl text-slate-500 hover:bg-slate-100">×</button>
+                </header>
+                <div className="ocr-field-grid mt-4 grid gap-3 sm:grid-cols-2">
+                  {Object.entries(ocrFields).map(([key, value]) => (
+                    <label key={key} className="ocr-field-label text-xs font-semibold capitalize text-slate-700">{key.replace(/([A-Z])/g, " $1")}
+                      {ocrEditMode ? <input value={value} onChange={(event) => setOcrFields((previous) => ({ ...previous, [key]: event.target.value }))} className="ocr-field-input mt-1 w-full rounded-md border px-3 py-2 text-sm font-normal" placeholder="Not detected" /> : <span className="ocr-field-value mt-1 block min-h-9 rounded-md border px-3 py-2 text-sm font-normal">{value || "Not detected"}</span>}
+                    </label>
+                  ))}
+                </div>
+                <footer className="ocr-dialog-footer mt-5 flex justify-end gap-2 border-t pt-4">
+                  {ocrEditMode ? <button type="button" onClick={() => setOcrEditMode(false)} className="ocr-button ocr-button-secondary rounded-md border px-4 py-2 text-xs font-semibold">Done editing</button> : <button type="button" onClick={() => setOcrEditMode(true)} className="ocr-button ocr-button-secondary rounded-md border px-4 py-2 text-xs font-semibold">Edit</button>}
+                  <button type="button" onClick={() => { applyOcrFields(ocrFields); setOcrFields(null); setOcrEditMode(false); }} className="ocr-button ocr-button-primary rounded-md px-4 py-2 text-xs font-semibold text-white">Confirm</button>
+                </footer>
+              </section>
+            </div>
+          )}
 
           {/* SERVER / VALIDATION ERROR BANNER */}
           {serverError && (
@@ -452,10 +514,10 @@ const validationState = useMemo(() => {
               <button type="button" className="back-dashboard-button" onClick={() => navigate("/testing-person/dashboard")}>Back to Dashboard</button>
               <button
               type="submit"
-              disabled={loading || (form.maxCapacity && !validationState.isValid)}
-              style={{ opacity: loading || (form.maxCapacity && !validationState.isValid) ? 0.6 : 1 }}
+              disabled={loading || !file || !validationState.isValid}
+              style={{ opacity: loading || !file || !validationState.isValid ? 0.6 : 1 }}
             >
-              {loading ? "Validating on Server..." : "Register Instrument"} <span>→</span>
+              {loading ? "Uploading nameplate and registering..." : "Register Instrument"} <span>→</span>
               </button>
             </div>
           </div>

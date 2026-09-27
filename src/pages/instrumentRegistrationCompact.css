@@ -18,4 +18,23 @@
 .form-footer{padding-top:14px!important}
 .form-footer-actions{display:flex;align-items:center;gap:10px}
 .back-dashboard-button{border:1px solid #2563EB!important;background:#F8FAFC!important;color:#2563EB!important}
+.ocr-overlay{background:rgba(15,27,51,.56);backdrop-filter:blur(4px)}
+.ocr-dialog{border:1px solid rgba(219,229,240,.9);box-shadow:0 28px 80px rgba(15,27,51,.28)!important;padding:24px!important}
+.ocr-dialog-header{border-color:#e4ebf4!important;padding-bottom:14px!important}
+.ocr-eyebrow{display:block;margin-bottom:6px;color:#2563eb;font-size:9px;font-weight:800;letter-spacing:1.25px}
+.ocr-close{color:#64748b;transition:background .15s ease,color .15s ease}
+.ocr-close:hover{background:#eff6ff;color:#1d4ed8}
+.ocr-field-grid{gap:12px 14px!important}
+.ocr-field-label{color:#52627a!important;font-size:10px!important;font-weight:750!important;letter-spacing:.45px;text-transform:uppercase}
+.ocr-field-value,.ocr-field-input{min-height:40px!important;border-color:#dbe5f0!important;border-radius:8px!important;background:#f8fafc!important;color:#17243a!important;font-size:13px!important;letter-spacing:.15px;transition:border-color .15s ease,box-shadow .15s ease,background .15s ease}
+.ocr-field-value{display:flex!important;align-items:center}
+.ocr-field-input{background:#fff!important}
+.ocr-field-input:focus{border-color:#3b82f6!important;box-shadow:0 0 0 3px rgba(59,130,246,.13)!important;outline:none}
+.ocr-dialog-footer{border-color:#e8eef5!important;padding-top:14px!important}
+.ocr-button{min-width:86px;border-radius:8px!important;transition:transform .15s ease,background .15s ease,border-color .15s ease,box-shadow .15s ease}
+.ocr-button:hover{transform:translateY(-1px)}
+.ocr-button-secondary{border-color:#cbd8e8!important;background:white!important;color:#2563eb!important}
+.ocr-button-secondary:hover{border-color:#93b4e8!important;background:#f4f8ff!important}
+.ocr-button-primary{background:#2563eb!important;box-shadow:0 5px 12px rgba(37,99,235,.2)}
+.ocr-button-primary:hover{background:#1d4ed8!important;box-shadow:0 7px 16px rgba(37,99,235,.25)}
 @media(max-width:700px){.registration-shell{padding:16px 14px!important}.page-heading h1{font-size:30px!important}.reference-badge{display:none}}

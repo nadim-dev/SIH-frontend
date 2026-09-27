@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Ban, Building2, ChevronDown, MapPin, MoreVertical, Plus, Search, Trash2, Users, UserRoundCheck } from "lucide-react";
+import { Ban, Building2, ChevronDown, Eye, EyeOff, LockKeyhole, Mail, MapPin, MoreVertical, Phone, Plus, Search, Trash2, Users, UserRound, UserRoundCheck } from "lucide-react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import {
   createLaboratoryApi,
@@ -247,8 +247,7 @@ export const AddLaboratory = () => {
     });
   }, [setHeaderContent]);
   return (
-    <main className="laboratory-page px-1 ">
-      <style>{`.laboratory-page h3,.laboratory-page h3 + p{display:none!important}`}</style>
+    <main className="laboratory-page px-1">
       <AddLaboratoryModal
         onClose={() => window.history.back()}
         onCreated={() => window.history.back()}
@@ -277,6 +276,8 @@ function AddLaboratoryModal({ onClose, onCreated }) {
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const set = (key, value) => setForm((current) => ({ ...current, [key]: value }));
   const submit = async (event) => {
     event.preventDefault();
     setSaving(true);
@@ -290,125 +291,48 @@ function AddLaboratoryModal({ onClose, onCreated }) {
       setSaving(false);
     }
   };
-  const set = (key, value) =>
-    setForm((current) => ({ ...current, [key]: value }));
-  const fields = [
-    ["name", "Laboratory Name"],
-    ["code", "Laboratory Code"],
-    ["address", "Address"],
-    ["city", "City"],
-    ["state", "State"],
-    ["pinCode", "PIN Code"],
-    ["officialEmail", "Official Email"],
-    ["contactNumber", "Contact Number"],
-    ["supervisorName", "Full Name"],
-    ["supervisorEmail", "Email"],
-    ["supervisorPhone", "Phone Number"],
-    ["password", "Password"],
-  ];
+
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/35 p-4">
-      <form
-        onSubmit={submit}
-        className="mx-auto my-4 w-full max-w-2xl rounded-xl bg-white p-6 shadow-2xl"
-      >
-        <div className="flex items-start justify-between">
-          <div>
-            <h3 className="text-lg font-bold text-slate-900">Add Laboratory</h3>
-            <p className="mt-1 text-xs text-slate-500">
-              Create a laboratory and assign its supervisor.
-            </p>
+    <form onSubmit={submit} className="space-y-4">
+      {error && <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700" role="alert">{error}</p>}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.15fr_.9fr]">
+        <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+          <h2 className="flex items-center gap-2 bg-blue-50 px-4 py-3 text-sm font-bold text-slate-800"><Building2 size={19} className="text-blue-600" />Laboratory Details</h2>
+          <div className="space-y-3 p-4">
+            <label className="block text-[11px] font-semibold text-slate-700">Laboratory Name <i className="not-italic text-red-500">*</i><input className="!m-0 !mt-1 !h-9 !w-full !rounded-md !border-slate-300 !px-3 !text-xs" required value={form.name} onChange={(event) => set("name", event.target.value)} placeholder="e.g. State Legal Metrology Laboratory, Mumbai" /></label>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <label className="block text-[11px] font-semibold text-slate-700">Laboratory Code <i className="not-italic text-red-500">*</i><input className="!m-0 !mt-1 !h-9 !w-full !rounded-md !border-slate-300 !px-3 !text-xs" required value={form.code} onChange={(event) => set("code", event.target.value)} placeholder="e.g. MH-LAB-001" /></label>
+              <label className="block text-[11px] font-semibold text-slate-700">Laboratory Type <i className="not-italic text-red-500">*</i><select className="!m-0 !mt-1 !h-9 !w-full !rounded-md !border-slate-300 !px-3 !text-xs" value={form.type} onChange={(event) => set("type", event.target.value)}><option>State Legal Metrology Laboratory</option><option>Regional Legal Metrology Laboratory</option></select></label>
+            </div>
+            <label className="block text-[11px] font-semibold text-slate-700">Address <i className="not-italic text-red-500">*</i><textarea className="!m-0 !mt-1 !w-full !rounded-md !border !border-solid !border-slate-300 !bg-white !px-3 !py-2 !text-xs focus:!border-blue-500 focus:!outline-none focus:!ring-2 focus:!ring-blue-100" required rows={2} value={form.address} onChange={(event) => set("address", event.target.value)} placeholder="e.g. 123, Legal Metrology Building, Fort" /></label>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <label className="block text-[11px] font-semibold text-slate-700">City <i className="not-italic text-red-500">*</i><input className="!m-0 !mt-1 !h-9 !w-full !rounded-md !border-slate-300 !px-3 !text-xs" required value={form.city} onChange={(event) => set("city", event.target.value)} placeholder="e.g. Mumbai" /></label>
+              <label className="block text-[11px] font-semibold text-slate-700">State <i className="not-italic text-red-500">*</i><input className="!m-0 !mt-1 !h-9 !w-full !rounded-md !border-slate-300 !px-3 !text-xs" required value={form.state} onChange={(event) => set("state", event.target.value)} placeholder="e.g. Maharashtra" /></label>
+              <label className="block text-[11px] font-semibold text-slate-700">PIN Code <i className="not-italic text-red-500">*</i><input className="!m-0 !mt-1 !h-9 !w-full !rounded-md !border-slate-300 !px-3 !text-xs" required inputMode="numeric" value={form.pinCode} onChange={(event) => set("pinCode", event.target.value)} placeholder="e.g. 400001" /></label>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <label className="block text-[11px] font-semibold text-slate-700">Official Email <i className="not-italic text-red-500">*</i><span className="relative block"><Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><input className="!m-0 !mt-1 !h-9 !w-full !rounded-md !border-slate-300 !pl-9 !pr-3 !text-xs" required type="email" value={form.officialEmail} onChange={(event) => set("officialEmail", event.target.value)} placeholder="e.g. lab.mumbai@gov.in" /></span></label>
+              <label className="block text-[11px] font-semibold text-slate-700">Contact Number <i className="not-italic text-red-500">*</i><span className="relative block"><Phone size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><input className="!m-0 !mt-1 !h-9 !w-full !rounded-md !border-slate-300 !pl-9 !pr-3 !text-xs" required type="tel" value={form.contactNumber} onChange={(event) => set("contactNumber", event.target.value)} placeholder="e.g. +91 98765 43210" /></span></label>
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="cursor-pointer text-xl text-slate-400"
-          >
-            ×
-          </button>
-        </div>
-        {error && (
-          <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">
-            {error}
-          </p>
-        )}
-        <h4 className="mt-5 border-b pb-2 text-xs font-bold uppercase text-slate-500">
-          Laboratory Details
-        </h4>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          {fields.slice(0, 8).map(([key, label]) => (
-            <label key={key} className="text-xs font-bold text-slate-600">
-              {label}
-              <input
-                required
-                type={
-                  key.includes("Email") || key === "officialEmail"
-                    ? "email"
-                    : "text"
-                }
-                value={form[key]}
-                onChange={(event) => set(key, event.target.value)}
-                className="!m-0 !mt-1.5 !h-10 !text-sm"
-              />
-            </label>
-          ))}
-          <label className="text-xs font-bold text-slate-600 sm:col-span-2">
-            Laboratory Type
-            <select
-              value={form.type}
-              onChange={(event) => set("type", event.target.value)}
-              className="!m-0 !mt-1.5 !h-10 !w-full !text-sm"
-            >
-              <option>State Legal Metrology Laboratory</option>
-              <option>Regional Legal Metrology Laboratory</option>
-            </select>
-          </label>
-        </div>
-        <h4 className="mt-6 border-b pb-2 text-xs font-bold uppercase text-slate-500">
-          Supervisor Details
-        </h4>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          {fields.slice(8).map(([key, label]) => (
-            <label key={key} className="text-xs font-bold text-slate-600">
-              {label}
-              <input
-                required
-                minLength={key === "password" ? 6 : undefined}
-                type={
-                  key.includes("Email")
-                    ? "email"
-                    : key === "password"
-                      ? "password"
-                      : "text"
-                }
-                value={form[key]}
-                onChange={(event) => set(key, event.target.value)}
-                className="!m-0 !mt-1.5 !h-10 !text-sm"
-              />
-            </label>
-          ))}
-        </div>
-        <div className="mt-6 flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="cursor-pointer rounded-md border px-4 py-2 text-xs font-bold"
-          >
-            Cancel
-          </button>
-          <button
-            disabled={saving}
-            type="submit"
-            className="cursor-pointer rounded-md bg-[#2563eb] px-4 py-2 text-xs font-bold text-white"
-          >
-            {saving ? "Saving..." : "Create Laboratory"}
-          </button>
-        </div>
-      </form>
-    </div>
+        </section>
+        <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+          <h2 className="flex items-center gap-2 bg-emerald-50 px-4 py-3 text-sm font-bold text-slate-800"><UserRound size={19} className="text-emerald-700" />Supervisor Details</h2>
+          <div className="space-y-4 p-4">
+            <label className="block text-[11px] font-semibold text-slate-700">Full Name <i className="not-italic text-red-500">*</i><input className="!m-0 !mt-1 !h-9 !w-full !rounded-md !border-slate-300 !px-3 !text-xs" required value={form.supervisorName} onChange={(event) => set("supervisorName", event.target.value)} placeholder="e.g. Rahul Sharma" /></label>
+            <label className="block text-[11px] font-semibold text-slate-700">Email <i className="not-italic text-red-500">*</i><span className="relative block"><Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><input className="!m-0 !mt-1 !h-9 !w-full !rounded-md !border-slate-300 !pl-9 !pr-3 !text-xs" required type="email" value={form.supervisorEmail} onChange={(event) => set("supervisorEmail", event.target.value)} placeholder="e.g. rahul.sharma@gov.in" /></span></label>
+            <label className="block text-[11px] font-semibold text-slate-700">Phone Number <i className="not-italic text-red-500">*</i><span className="relative block"><Phone size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><input className="!m-0 !mt-1 !h-9 !w-full !rounded-md !border-slate-300 !pl-9 !pr-3 !text-xs" required type="tel" value={form.supervisorPhone} onChange={(event) => set("supervisorPhone", event.target.value)} placeholder="e.g. +91 98765 43210" /></span></label>
+            <label className="block text-[11px] font-semibold text-slate-700">Password <i className="not-italic text-red-500">*</i><span className="relative block"><LockKeyhole size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><input className="!m-0 !mt-1 !h-9 !w-full !rounded-md !border-slate-300 !pl-9 !pr-10 !text-xs" required minLength={6} type={showPassword ? "text" : "password"} value={form.password} onChange={(event) => set("password", event.target.value)} placeholder="Enter password" /><button className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800" type="button" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}</button></span><small className="mt-1 block text-[10px] font-normal text-slate-500">Minimum 6 characters</small></label>
+          </div>
+        </section>
+      </div>
+      <footer className="flex justify-end gap-3 border-t border-slate-200 pt-4">
+        <button type="button" onClick={onClose} className="rounded-md border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50">Cancel</button>
+        <button disabled={saving} type="submit" className="rounded-md bg-blue-600 px-5 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 disabled:cursor-wait disabled:opacity-60">{saving ? "Creating laboratory…" : "Create Laboratory"}</button>
+      </footer>
+    </form>
   );
 }
-
 function LaboratoryActions({ laboratory, onView, onToggle, onDelete }) {
   const options = [
     { label: "View Laboratory", icon: Building2, color: "text-blue-600", onClick: onView },

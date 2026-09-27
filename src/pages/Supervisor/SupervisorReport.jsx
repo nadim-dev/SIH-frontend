@@ -115,6 +115,7 @@ export const SupervisorReport = () => {
     );
   const instrument = report.instrumentDetails || {};
   const results = report.testResults || {};
+  const isNonCompliant = report.complianceStatus === "NON_COMPLIANT";
   const manufacturerName = instrument.manufacturer || "Maharashtra Instruments";
   const companySlug = manufacturerName.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 32) || "manufacturer";
   const applicantAddress = instrument.applicantAddress || instrument.address || "L.B.S. Marg, Vikhroli West, Mumbai, Maharashtra, India";
@@ -183,10 +184,10 @@ export const SupervisorReport = () => {
               </p>
             </div>
           </div>
-          <div className="compliance-badge ml-4 flex items-center gap-1.5 rounded-lg bg-emerald-100 px-3 py-2 text-emerald-700">
-            <span className="compliance-check grid h-6 w-6 place-items-center rounded-full bg-emerald-600"><Check size={16} strokeWidth={3} className="text-white" /></span>
+          <div className={`compliance-badge ml-4 flex items-center gap-1.5 rounded-lg px-3 py-2 ${isNonCompliant ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"}`}>
+            <span className={`compliance-check grid h-6 w-6 place-items-center rounded-full ${isNonCompliant ? "bg-red-600" : "bg-emerald-600"}`}><Check size={16} strokeWidth={3} className="text-white" /></span>
             <span>
-              <strong className="block text-xs">COMPLIANT</strong>
+              <strong className="block text-xs">{isNonCompliant ? "NON-COMPLIANT" : "COMPLIANT"}</strong>
               <small className="block text-[7px]">
                 Overall Evaluation Result
               </small>
@@ -296,16 +297,35 @@ const TestTable = ({ name, test }) => {
     : repeatabilityMpe
     ? [...availableColumns.filter((key) => key !== "mpeLimit"), "mpeLimit"]
     : availableColumns.slice(0, 7);
-  return <div className="overflow-hidden rounded-md border border-slate-200 bg-white"><div className="flex items-center justify-between bg-[#f5f8fc] px-3 py-2"><strong className="text-[12px] text-[#17345a]">{name}</strong><span className={`rounded-md px-2 py-1 text-[10px] font-bold ${test.passed ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>{test.passed ? "PASS" : "FAIL"}</span></div>{rows.length ? <div className="overflow-auto"><table className="w-full min-w-[620px] border-collapse text-left text-[10px]"><thead className="bg-white text-slate-600"><tr>{columns.map((column) => <th key={column} className="border-b border-r border-slate-200 px-3 py-2 text-[11px] font-extrabold tracking-[.1px] last:border-r-0">{formatLabel(column)}</th>)}</tr></thead><tbody>{rows.map((row, index) => <tr key={row._id || index} className="border-b border-slate-100 last:border-0">{columns.map((column) => <td key={column} className="border-r border-slate-100 px-3 py-2 text-slate-700 last:border-r-0">{column === "mpe" || column === "mpeLimit" ? `±${displayValue(repeatabilityMpe && column === "mpeLimit" ? test.mpeLimit : row[column])}` : displayValue(row[column])}</td>)}</tr>)}</tbody></table></div> : <p className="m-0 px-3 py-3 text-[10px] text-slate-500">No detailed readings available.</p>}</div>;
+  return <div className="overflow-hidden rounded-md border border-slate-200 bg-white"><div className="flex items-center justify-between bg-[#f5f8fc] px-3 py-2"><strong className="text-[12px] text-[#17345a]">{name}</strong><span className={`rounded-md px-2 py-1 text-[10px] font-bold ${test.passed ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>{test.passed ? "PASS" : "FAIL"}</span></div>{rows.length ? <div className="overflow-auto"><table className="w-full min-w-[620px] border-collapse text-left text-[10px]"><thead className="bg-white text-slate-600"><tr>{columns.map((column) => <th key={column} className="border-b border-r border-slate-200 px-3 py-2 text-[11px] font-extrabold tracking-[.1px] last:border-r-0">{formatLabel(column)}</th>)}</tr></thead><tbody>{rows.map((row, index) => {
+    const rowFailed = row.passed === false;
+    return <tr key={row._id || index} className="border-b border-slate-100 last:border-0">{columns.map((column) => {
+      const highlightFailedValue = rowFailed && [errorColumn, mpeColumn].includes(column);
+      const cellTone = "border-r border-slate-100 px-3 py-2 text-slate-700 last:border-r-0";
+      const valueTone = highlightFailedValue ? "rounded-sm bg-red-50 px-1 py-0.5 font-medium text-red-700" : "";
+      const value = column === "mpe" || column === "mpeLimit" ? `±${displayValue(repeatabilityMpe && column === "mpeLimit" ? test.mpeLimit : row[column])}` : displayValue(row[column]);
+      return <td key={column} className={cellTone}><span className={valueTone}>{value}</span></td>;
+    })}</tr>;
+  })}</tbody></table></div> : <p className="m-0 px-3 py-3 text-[10px] text-slate-500">No detailed readings available.</p>}</div>;
 };
 
 const formatLabel = (value) => value === "stepIndex" || value === "step" || value === "label" ? "Test Position" : value === "correctedErrorEc" || value === "correctedError" ? "Corrected Error (kg)" : value === "deltaL" ? "Delta L (kg)" : value === "trueP" || value === "p" ? "P (kg)" : value === "mpeLimit" || value === "mpe" ? "MPE Limit (kg)" : value === "load" || value === "loadApplied" || value === "indicated" || value === "indication" ? `${value === "loadApplied" ? "Load Applied" : value === "indication" ? "Indication" : value.replace(/^./, (letter) => letter.toUpperCase())} (kg)` : value.replace(/([A-Z])/g, " $1").replace(/^./, (letter) => letter.toUpperCase());
 
 const FindingsAndEvaluation = ({ results, report }) => {
-  const compliant = report.reportStatus === "GENERATED" || results.complianceStatus === "COMPLIANT" || Object.values(results).filter((value) => value && typeof value === "object" && "passed" in value).every((test) => test.passed !== false);
+  const compliant = report.complianceStatus
+    ? report.complianceStatus === "COMPLIANT"
+    : results.complianceStatus === "COMPLIANT" || report.reportStatus === "GENERATED";
+  const findingsTone = compliant
+    ? "border-emerald-100 bg-emerald-50"
+    : "border-red-100 bg-red-50";
+  const findingsTextTone = compliant ? "text-emerald-800" : "text-red-800";
+  const evaluationTone = compliant
+    ? "border-emerald-100 bg-emerald-50"
+    : "border-red-100 bg-red-50";
+  const evaluationTextTone = compliant ? "text-emerald-800" : "text-red-800";
   return <div className="m-3 grid gap-3 lg:grid-cols-2">
-    <section className="overflow-hidden rounded-md border border-slate-200"><SectionTitle icon={AlertTriangle} iconClass="text-red-500" title="6. Non-Compliance / Findings" /><div className="m-2 rounded-md border border-emerald-100 bg-emerald-50 px-3 py-3"><strong className="block text-[10px] text-emerald-800">{compliant ? "No non-compliances found." : "Non-compliance findings recorded."}</strong><p className="m-0 mt-1 text-[9px] text-slate-600">{compliant ? "The instrument meets the applicable requirements of OIML R 76-1:2006." : "Review the failed test results and recorded findings above."}</p></div></section>
-    <section className="overflow-hidden rounded-md border border-slate-200"><SectionTitle icon={CheckCircle2} iconClass="text-blue-600" title="7. Overall Evaluation" /><div className={`m-2 rounded-md border px-3 py-3 ${compliant ? "border-emerald-100 bg-emerald-50" : "border-red-100 bg-red-50"}`}><div className="flex items-center gap-2"><span className={`grid h-7 w-7 place-items-center rounded-full ${compliant ? "bg-emerald-600" : "bg-red-600"}`}><Check size={17} strokeWidth={3} className="text-white" /></span><strong className={`text-sm ${compliant ? "text-emerald-800" : "text-red-800"}`}>{compliant ? "COMPLIANT" : "NOT COMPLIANT"}</strong></div><p className="m-0 mt-1 pl-9 text-[9px] text-slate-600">Based on the observations and calculations recorded during the evaluation, the instrument complies with the applicable requirements.</p></div></section>
+    <section className="overflow-hidden rounded-md border border-slate-200"><SectionTitle icon={AlertTriangle} iconClass="text-red-500" title="6. Non-Compliance / Findings" /><div className={`m-2 rounded-md border px-3 py-3 ${findingsTone}`}><strong className={`block text-[10px] ${findingsTextTone}`}>{compliant ? "No non-compliances found." : "Non-compliance findings recorded."}</strong><p className="m-0 mt-1 text-[9px] text-slate-600">{compliant ? "The instrument meets the applicable requirements of OIML R 76-1:2006." : "Review the failed test results and recorded findings above."}</p></div></section>
+    <section className="overflow-hidden rounded-md border border-slate-200"><SectionTitle icon={CheckCircle2} iconClass="text-blue-600" title="7. Overall Evaluation" /><div className={`m-2 rounded-md border px-3 py-3 ${evaluationTone}`}><div className="flex items-center gap-2"><span className={`grid h-7 w-7 place-items-center rounded-full ${compliant ? "bg-emerald-600" : "bg-red-600"}`}><Check size={17} strokeWidth={3} className="text-white" /></span><strong className={`text-sm ${evaluationTextTone}`}>{compliant ? "COMPLIANT" : "NON-COMPLIANT"}</strong></div><p className="m-0 mt-1 pl-9 text-[9px] text-slate-600">{compliant ? "Based on the observations and calculations recorded during the evaluation, the instrument complies with the applicable requirements." : "The instrument failed one or more applicable requirements. See the failed test results and findings above."}</p></div></section>
   </div>;
 };
 
@@ -315,7 +335,7 @@ const SignaturesAndAttachments = ({ report, instrument }) => {
   const testerName = tester?.name || "—";
   const supervisorName = supervisor?.name || "—";
   return <div className="m-3 grid gap-3 lg:grid-cols-[1.1fr_.9fr]">
-    <section className="overflow-hidden rounded-md border border-slate-200"><SectionTitle icon={FileText} title="8. Signatures & Approval" /><div className="grid gap-2 bg-slate-50 p-2 sm:grid-cols-2"><SignatureCard title="Testing Officer" name={testerName} role="Testing Officer" date={report.createdAt} /><SignatureCard title="Lab Supervisor" name={supervisorName} role="Lab Supervisor" date={report.approvedAt || report.updatedAt} /></div></section>
+    <section className="overflow-hidden rounded-md border border-slate-200"><SectionTitle icon={FileText} title="8. Signatures & Approval" /><div className="grid gap-2 bg-slate-50 p-2 sm:grid-cols-2"><SignatureCard title="Submitted by" name={testerName} role="Testing Officer" date={report.createdAt} /><SignatureCard title="Approved by" name={supervisorName} role="Lab Supervisor" date={report.approvedAt || report.updatedAt} /></div></section>
     <section className="overflow-hidden rounded-md border border-slate-200"><SectionTitle icon={FileText} title="9. Attachments" /><div className="grid grid-cols-[1.5fr_.6fr_.45fr] bg-[#f5f8fc] px-3 py-2 text-[9px] font-bold text-[#17345a]"><span>Document Name</span><span>Type</span><span>Status</span></div><div className="overflow-hidden"><AttachmentRow name="Nameplate Photograph" type="Image" available={Boolean(instrument.nameplatePhotoUrl)} /><AttachmentRow name="Instrument Photographs" type="Image" available={Boolean(report.testResults?.generalExamination?.photos)} /><AttachmentRow name="Supporting Documents" type="PDF" available={Boolean(report.evaluationId)} /><AttachmentRow name="Detailed Test Data" type="PDF" available={Boolean(report.testResults)} /></div></section>
   </div>;
 };

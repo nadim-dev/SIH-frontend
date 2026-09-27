@@ -199,7 +199,7 @@ export const EccentricityTestScreen = () => {
             type="button"
             className="proceed-button"
             style={failedPositions.length ? { background: "#fef2f2", color: "#b91c1c", border: "1px solid #fecaca" } : { background: "#9ca3af", cursor: "not-allowed", opacity: 0.7 }}
-            disabled={failedPositions.length === 0}
+            disabled={failedPositions.length === 0 || positions.some((row) => !positionHasReading(row))}
             onClick={() => setShowNcrForm(true)}
           >
             Generate NCR Report
@@ -224,8 +224,14 @@ export const EccentricityTestScreen = () => {
             label: `${row[1]} eccentricity reading failed (indication ${row[3]} kg, Ec ${positionError(row)} kg, MPE ±${Number(testConfig?.mpe || 0).toFixed(4)} kg)`,
           }))}
           onClose={() => setShowNcrForm(false)}
-          onSubmit={createNonComplianceReportApi}
-          onSubmitted={() => setShowNcrForm(false)}
+          onSubmit={async (payload) => {
+            await submitEccentricityObservationsApi(id, {
+              testLoad: testConfig.testLoad,
+              positions: positions.map((row, index) => ({ step: index + 1, indicated: Number(row[3]), deltaL: Number(row[4]) })),
+            });
+            return createNonComplianceReportApi({ ...payload, testType: "ECCENTRICITY" });
+          }}
+          onSubmitted={() => navigate("/testing-person/dashboard")}
         />
       </section>
     </main>

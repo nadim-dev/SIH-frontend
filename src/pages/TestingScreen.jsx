@@ -161,7 +161,7 @@ export const TestingScreen = () => {
       label: `${row.description} exceeded the MPE limit (Ec ${row.Ec}, MPE ±${row.mpe})`,
     }));
 
-  const canGenerateNCR = failedItems.length > 0;
+  const canGenerateNCR = failedItems.length > 0 && calculatedGrid.every((row) => row.indicated !== "" && row.deltaL !== "");
 
 
   // 3. Final Submission to Backend
@@ -299,8 +299,11 @@ export const TestingScreen = () => {
       instrumentId={id}
       failedItems={failedItems}
       onClose={() => setShowNcrForm(false)}
-      onSubmit={createNonComplianceReportApi}
-      onSubmitted={() => setShowNcrForm(false)}
+      onSubmit={async (payload) => {
+        await submitInstrumentObservationsApi(id, { readings: calculatedGrid, overallResult: "FAIL" });
+        return createNonComplianceReportApi({ ...payload, testType: "WEIGHING_PERFORMANCE" });
+      }}
+      onSubmitted={() => navigate("/testing-person/dashboard")}
     />
     </>
   );

@@ -13,7 +13,7 @@ import { RepeatabilityTestScreen } from "./pages/Tests/RepeatabilityTestScreen";
 import { LoginPage } from "./pages/Login";
 import { TestingPersonDashboard } from "./pages/TestingPersonDashbaord";
 import { TestingPersonReports } from "./pages/TestingPersonReports";
-import { AdminDashbaord } from "./pages/Admin/AdminDashboard";
+import { AdminDashbaord } from "./pages/Admin/aadminDashboard";
 import { AdminReports } from "./pages/AdminReports";
 import { AdminReportsPage } from "./pages/Admin/AdminReportsPage";
 import AuditLog from "./pages/Admin/auditlog";
@@ -37,9 +37,12 @@ import { SupervisorEvaluation } from "./pages/Supervisor/SupervisorEvaluation";
 import { SupervisorEvaluationReview } from "./pages/Supervisor/SupervisorEvaluationReview";
 import { SupervisorReport } from "./pages/Supervisor/SupervisorReport";
 import { SupervisorReportsPage } from "./pages/Supervisor/SupervisorReportsPage";
+import { SupervisorKeyMetrics } from "./pages/Supervisor/SupervisorKeyMetrics";
 import { NotificationsPage } from "./pages/NotificationsPage";
 import { AddLaboratory, ManageLabs } from "./pages/Admin/ManageLabs";
 import { AdminUsers } from "./pages/Admin/AdminUsers";
+import ProfilePage from "./pages/ProfilePage";
+import SupervisorLaboratoryProfile from "./pages/SupervisorLaboratoryProfile";
 
 function useAuth() {
   return useContext(AuthContext);
@@ -102,6 +105,8 @@ const router = createBrowserRouter([
       {
         element: <DashboardLayout />,
         children: [
+          { path: "/profile", element: <ProfilePage /> },
+          { path: "/testing-person/profile", element: <ProfilePage /> },
           {
             path: "/testing-person/dashboard",
             element: <TestingPersonDashboard />,
@@ -190,6 +195,14 @@ const router = createBrowserRouter([
           {
             path: "/supervisor/dashbaord",
             element: <Supervisordashbaord />,
+          },
+          {
+            path: "/supervisor/laboratory-profile",
+            element: <SupervisorLaboratoryProfile />,
+          },
+          {
+            path: "/supervisor/key-metrics",
+            element: <SupervisorKeyMetrics />,
           },
           {
             path: "/supervisor/testing-officers",

@@ -158,8 +158,11 @@ export const RepeatabilityTestScreen = () => {
           instrumentId={id}
           failedItems={[{ key: "repeatability", label: `Repeatability variation exceeded the MPE limit (variation ${variationRange?.toFixed(4)}, MPE ±${config.mpe})` }]}
           onClose={() => setShowNcrForm(false)}
-          onSubmit={createNonComplianceReportApi}
-          onSubmitted={() => setShowNcrForm(false)}
+          onSubmit={async (payload) => {
+            await submitRepeatabilityObservationsApi(id, { testLoad: config.testLoad, runs: runs.map((run) => ({ indication: Number(run.indicated) })) });
+            return createNonComplianceReportApi({ ...payload, testType: "REPEATABILITY" });
+          }}
+          onSubmitted={() => navigate("/testing-person/dashboard")}
         />
       </section>
     </main>

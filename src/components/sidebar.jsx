@@ -21,6 +21,7 @@ const adminNavigation = [
 
 const supervisorNavigation = [
   { label: "Dashboard", to: "/supervisor/dashbaord", icon: House },
+  { label: "Laboratory Profile", to: "/supervisor/laboratory-profile", icon: Building2 },
   { label: "Testing Officers", to: "/supervisor/testing-officers", icon: Users },
   { label: "Evaluations", to: "/supervisor/evaluations", icon: ClipboardList },
   { label: "Non-Compliance", to: "/supervisor/non-compliance", icon: AlertTriangle },
@@ -45,6 +46,7 @@ export function Sidebar() {
     <aside className="nawi-sidebar">
       <div className="nawi-brand">
         <img src={nawiIcon} alt="NAWI Pro" />
+        <span>NAWI <b>Pro</b></span>
       </div>
 
       <nav className="nawi-nav" aria-label="Main navigation">
@@ -57,7 +59,7 @@ export function Sidebar() {
       </nav>
 
       <div className="nawi-sidebar-footer">
-        <NavLink to="/testing-person/profile" className="nawi-sidebar-profile" aria-label="View profile">
+        <NavLink to="/profile" className="nawi-sidebar-profile" aria-label="View profile">
           <div className="nawi-sidebar-profile-avatar">{getInitials(currentUser?.name || "User")}</div>
           <div className="nawi-sidebar-profile-copy">
             <strong>{currentUser?.name || "User"}</strong>

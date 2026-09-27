@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
-import { getMyEvaluationsApi } from "../api/instrumentApi";
+import { getMyEvaluationsApi, getTestingDashboardSummaryApi } from "../api/instrumentApi";
 import { formatDate } from "../utils/formatDate";
 import { getInstrumentImage } from "../utils/instrumentImage";
 import { ArrowRight, CheckCircle, Clock3, Eye, FileText, FlaskConical, Plus } from "lucide-react";
@@ -10,6 +10,7 @@ export const TestingPersonDashboard = () => {
   const { setHeaderContent, currentUser } = useOutletContext();
   const navigate = useNavigate();
   const [evaluations, setEvaluations] = useState([]);
+  const [summary, setSummary] = useState({ registeredInstruments: 0, testsInProgress: 0, awaitingReview: 0, completedTests: 0 });
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     setHeaderContent({
@@ -19,8 +20,14 @@ export const TestingPersonDashboard = () => {
     const loadEvaluations = async () => {
       try {
         const officerId = new URLSearchParams(window.location.search).get("officerId");
-        const response = await getMyEvaluationsApi(officerId);
-        setEvaluations(response.data || []);
+        const [evaluationsResult, summaryResult] = await Promise.allSettled([
+          getMyEvaluationsApi(officerId),
+          getTestingDashboardSummaryApi(officerId),
+        ]);
+        if (evaluationsResult.status === "fulfilled") setEvaluations(evaluationsResult.value.data || []);
+        else console.error("Unable to load evaluations:", evaluationsResult.reason);
+        if (summaryResult.status === "fulfilled") setSummary(summaryResult.value.data || { registeredInstruments: 0, testsInProgress: 0, awaitingReview: 0, completedTests: 0 });
+        else console.error("Unable to load dashboard summary:", summaryResult.reason);
       } catch (error) {
         console.error("Unable to load evaluations:", error);
       } finally {
@@ -33,9 +40,9 @@ export const TestingPersonDashboard = () => {
     [
       "Registered",
       "Instruments",
-      12,
-      "+2",
-      "this month",
+      summary.registeredInstruments,
+      "",
+      "registered",
       FileText,
       "border-[#B7D7FF] bg-[#EAF4FF]",
       "bg-[#B8D8FF] text-[#1267E8]",
@@ -44,9 +51,9 @@ export const TestingPersonDashboard = () => {
     [
       "Tests in",
       "Progress",
-      4,
-      "+1",
-      "from last week",
+      summary.testsInProgress,
+      "",
+      "active now",
       FlaskConical,
       "border-[#FFE09A] bg-[#FFF8E6]",
       "bg-[#FFE19A] text-[#B96800]",
@@ -55,9 +62,9 @@ export const TestingPersonDashboard = () => {
     [
       "Awaiting",
       "Review",
-      3,
-      "+1",
-      "from last week",
+      summary.awaitingReview,
+      "",
+      "awaiting review",
       Clock3,
       "border-[#D9C9FF] bg-[#F4EEFF]",
       "bg-[#D9C0FF] text-[#6D28D9]",
@@ -66,9 +73,9 @@ export const TestingPersonDashboard = () => {
     [
       "Completed",
       "Tests",
-      5,
-      "+3",
-      "this month",
+      summary.completedTests,
+      "",
+      "finalized",
       CheckCircle,
       "border-[#B3EACC] bg-[#E8FAF1]",
       "bg-[#B7F0D1] text-[#078A52]",
@@ -99,7 +106,7 @@ export const TestingPersonDashboard = () => {
               <div className="mt-2 flex items-end justify-between pl-[56px]">
                 <strong className="text-2xl leading-none">{n}</strong>
                 <span className={`text-xs ${trendStyle}`}>
-                  ↗ {change}{" "}
+                  {change && <>↗ {change}{" "}</>}
                   <small className="ml-1 text-[#475569]">{period}</small>
                 </span>
               </div>
@@ -146,21 +153,23 @@ export const TestingPersonDashboard = () => {
                   const i = e.instrumentId || {};
                   const p = e.progress || 0;
                   const isFinal = p >= 100;
-                  const stage = e.status === "DOCUMENTS_PENDING" ? "Documents" : e.status === "ENVIRONMENT_PENDING" ? "Environment" : e.status.replaceAll("_", " ");
+                  const isNonCompliant = e.complianceStatus === "NON_COMPLIANT" || e.complianceResult === "FAIL";
+                  const stage = isNonCompliant ? "Non-Compliant" : e.status === "DOCUMENTS_PENDING" ? "Documents" : e.status === "ENVIRONMENT_PENDING" ? "Environment" : e.status.replaceAll("_", " ");
                   const sc =
-                    e.status === "COMPLETED"
+                    isNonCompliant
+                      ? "bg-[#FEF2F2] text-[#DC2626]"
+                      : e.status === "COMPLETED"
                       ? "bg-[#ECFDF5] text-[#059669]"
                       : e.status.includes("REVIEW")
                         ? "bg-[#F3E8FF] text-[#7C3AED]"
                         : e.status === "TESTING"
                           ? "bg-[#FFF7E6] text-[#B45309]"
                           : "bg-[#EFF6FF] text-[#2563EB]";
-                  const stageLabel = e.status === "DOCUMENTS_PENDING" ? "Documents" : e.status === "ENVIRONMENT_PENDING" ? "Environment" : e.status.replaceAll("_", " ");
-                  const progressClass = e.status === "COMPLETED" ? "bg-[#10B981]" : e.status.includes("REVIEW") ? "bg-[#F43F5E]" : e.status === "TESTING" ? "bg-[#8B5CF6]" : e.status === "ENVIRONMENT_PENDING" ? "bg-[#F59E0B]" : "bg-[#2563EB]";
+                  const progressClass = isNonCompliant ? "bg-[#DC2626]" : e.status === "COMPLETED" ? "bg-[#10B981]" : e.status.includes("REVIEW") ? "bg-[#F43F5E]" : e.status === "TESTING" ? "bg-[#8B5CF6]" : e.status === "ENVIRONMENT_PENDING" ? "bg-[#F59E0B]" : "bg-[#2563EB]";
                   return (
                     <tr key={e._id} className="border-b border-[#E2E8F0]">
                       <td className="p-2">
-                        <strong className="block text-[11px] font-bold text-[#0F1B33]">{e.applicationNumber}</strong>
+                        <strong className="block text-[11px] font-bold text-black">{e.applicationNumber}</strong>
                         {e.status === "DOCUMENTS_PENDING" && <span className="mt-1 inline-block rounded bg-[#DBEAFE] px-1.5 py-0.5 text-[8px] font-semibold text-[#2563EB]">New</span>}
                       </td>
                       <td className="p-2">

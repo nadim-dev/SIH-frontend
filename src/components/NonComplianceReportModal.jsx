@@ -5,6 +5,8 @@ export default function NonComplianceReportModal({
   open,
   failedItems = [],
   instrumentId,
+  testType,
+  testData,
   onClose,
   onSubmit,
   onSubmitted,
@@ -27,6 +29,8 @@ export default function NonComplianceReportModal({
   const submit = async () => {
     const payload = {
       instrumentId,
+      testType,
+      testData,
       failedItems,
       remarks,
       evidence,
