@@ -17,6 +17,7 @@ import {
   Target,
   Thermometer,
   Trash2,
+  Zap,
 } from "lucide-react";
 import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { completeUnimplementedTestApi, getTestExecutionDataApi, submitFullInspectionApi } from "../api/instrumentApi.js";
@@ -35,8 +36,8 @@ const categoryLabel = {
   ENDURANCE: "Endurance",
   ELECTRONIC: "Electronic",
 };
-const testIconClass = { GENERAL_EXAMINATION: "bg-blue-50 text-blue-600", WEIGHING_PERFORMANCE: "bg-blue-50 text-blue-600", REPEATABILITY: "bg-emerald-50 text-emerald-600", ECCENTRICITY: "bg-blue-50 text-blue-600", TARE: "bg-blue-50 text-blue-600", TEMPERATURE_INFLUENCE: "bg-violet-50 text-violet-600", ENDURANCE: "bg-orange-50 text-orange-600", ELECTRONIC_TESTS: "bg-red-50 text-red-600" };
-const testIcons = { GENERAL_EXAMINATION: ClipboardList, WEIGHING_PERFORMANCE: BarChart3, REPEATABILITY: Repeat2, ECCENTRICITY: Target, TARE: Trash2, TEMPERATURE_INFLUENCE: Thermometer, ENDURANCE: Activity, ELECTRONIC_TESTS: Cpu };
+const testIconClass = { GENERAL_EXAMINATION: "bg-blue-50 text-blue-600", WEIGHING_PERFORMANCE: "bg-blue-50 text-blue-600", REPEATABILITY: "bg-emerald-50 text-emerald-600", ECCENTRICITY: "bg-blue-50 text-blue-600", TARE: "bg-blue-50 text-blue-600", TEMPERATURE_INFLUENCE: "bg-violet-50 text-violet-600", SENSITIVITY: "bg-amber-50 text-amber-600", ENDURANCE: "bg-orange-50 text-orange-600", ELECTRONIC_TESTS: "bg-red-50 text-red-600" };
+const testIcons = { GENERAL_EXAMINATION: ClipboardList, WEIGHING_PERFORMANCE: BarChart3, REPEATABILITY: Repeat2, ECCENTRICITY: Target, TARE: Trash2, TEMPERATURE_INFLUENCE: Thermometer, SENSITIVITY: Zap, ENDURANCE: Activity, ELECTRONIC_TESTS: Cpu };
 const getTestRoute = (instrumentId, code, applicationNumber) => ({
   GENERAL_EXAMINATION: `/testing/${instrumentId}/general-examination${applicationNumber ? `?applicationNumber=${encodeURIComponent(applicationNumber)}` : ""}`,
   WEIGHING_PERFORMANCE: `/testing/${instrumentId}/weighingtest${applicationNumber ? `?applicationNumber=${encodeURIComponent(applicationNumber)}` : ""}`,
@@ -44,6 +45,7 @@ const getTestRoute = (instrumentId, code, applicationNumber) => ({
   REPEATABILITY: `/testing/${instrumentId}/repeatability${applicationNumber ? `?applicationNumber=${encodeURIComponent(applicationNumber)}` : ""}`,
   TARE: `/testing/${instrumentId}/tare${applicationNumber ? `?applicationNumber=${encodeURIComponent(applicationNumber)}` : ""}`,
   TEMPERATURE_INFLUENCE: `/testing/${instrumentId}/temperature-influence`,
+  SENSITIVITY: `/testing/${instrumentId}/sensitivity${applicationNumber ? `?applicationNumber=${encodeURIComponent(applicationNumber)}` : ""}`,
   ENDURANCE: `/testing/${instrumentId}/endurance`,
   ELECTRONIC_TESTS: `/testing/${instrumentId}/electronic-tests`,
 }[code] || `/testing/${instrumentId}/test-execution`);

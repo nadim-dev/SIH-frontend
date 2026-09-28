@@ -10,6 +10,7 @@ import { InstrumentRegister } from "./pages/InstrumentRegisteration";
 import { TestingScreen } from "./pages/TestingScreen";
 import { EccentricityTestScreen } from "./pages/Tests/EccentricityTestScreen";
 import { RepeatabilityTestScreen } from "./pages/Tests/RepeatabilityTestScreen";
+import { SensitivityTest } from "./pages/Tests/SensitivityTest";
 import { LoginPage } from "./pages/Login";
 import { TestingPersonDashboard } from "./pages/TestingPersonDashbaord";
 import { TestingPersonReports } from "./pages/TestingPersonReports";
@@ -41,6 +42,7 @@ import { SupervisorKeyMetrics } from "./pages/Supervisor/SupervisorKeyMetrics";
 import { NotificationsPage } from "./pages/NotificationsPage";
 import { AddLaboratory, ManageLabs } from "./pages/Admin/ManageLabs";
 import { AdminUsers } from "./pages/Admin/AdminUsers";
+import { OIMLStandardsPage } from "./pages/Admin/OIMLStandardsPage";
 import ProfilePage from "./pages/ProfilePage";
 import SupervisorLaboratoryProfile from "./pages/SupervisorLaboratoryProfile";
 import { AssistantPage } from "./pages/AssistantPage";
@@ -171,6 +173,10 @@ const router = createBrowserRouter([
             element: <TempretureTest />,
           },
           {
+            path: "/testing/:id/sensitivity",
+            element: <SensitivityTest />,
+          },
+          {
             path: "/admin/dashbaord",
             element: <AdminDashbaord />,
           },
@@ -179,12 +185,20 @@ const router = createBrowserRouter([
             element: <AdminReportsPage />,
           },
           {
+            path: "/admin/oiml-standards",
+            element: <OIMLStandardsPage />,
+          },
+          {
             path: "/admin/audit-logs",
             element: <AuditLog />,
           },
           {
             path: "/admin/laboratories",
             element: <ManageLabs />,
+          },
+          {
+            path: "/admin/laboratories/:labId/profile",
+            element: <SupervisorLaboratoryProfile />,
           },
           {
             path: "/admin/users",

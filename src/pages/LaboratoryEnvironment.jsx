@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, ArrowRight, Droplets, Gauge, Thermometer } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Droplets,
+  Gauge,
+  Thermometer,
+} from "lucide-react";
 import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { saveEvaluationEnvironmentApi } from "../api/instrumentApi";
 
@@ -79,7 +85,10 @@ export const LaboratoryEnvironment = () => {
 
   return (
     <section className="min-h-[calc(100vh-5rem)] bg-[#F4F8FC] px-4 py-5 sm:px-6">
-      <form onSubmit={handleSubmit} className="mx-auto max-w-5xl rounded-xl bg-white px-5 py-5 shadow-[0_8px_28px_rgba(35,70,110,0.08)] sm:px-5 sm:py-5">
+      <form
+        onSubmit={handleSubmit}
+        className="mx-auto max-w-5xl rounded-xl bg-white px-5 py-5 shadow-[0_8px_28px_rgba(35,70,110,0.08)] sm:px-5 sm:py-5"
+      >
         <h2 className="m-0 text-[20px] font-bold leading-tight text-[#152642]">
           Environmental Conditions
         </h2>
@@ -88,31 +97,43 @@ export const LaboratoryEnvironment = () => {
         </p>
 
         <div className="mt-4 grid gap-4 md:grid-cols-3">
-          {fields.map(({ key, label, unit, value, range, icon: Icon, iconClass }) => (
-            <label key={key} className="!font-[sans-serif] !normal-case rounded-lg border border-[#DCE5F0] p-3.5">
-              <span className={`grid h-[48px] w-[48px] place-items-center rounded-lg ${iconClass}`}>
-                <Icon size={26} strokeWidth={2.2} />
-              </span>
-              <span className="mt-2 block text-[0.9rem] font-light text-[#152642]">
-                {label}{key !== "pressure" && <em className="ml-1 not-italic text-[#EF233C]">*</em>}
-              </span>
-              <span className="mt-3 flex h-10 overflow-hidden rounded-lg border border-[#DCE5F0] bg-white">
-                <input
-                  type="number"
-                  step="any"
-                  min="0"
-                  required={key !== "pressure"}
-                  value={values[key]}
-                  onChange={(event) => updateValue(key, event.target.value)}
-                  className=" !m-0 !min-h-0 !min-w-0 flex-1 !rounded-none !border-0 !px-3 text-[15px] text-[#456184] outline-none"
-                />
-                <span className=" grid min-w-[55px] place-items-center border-l border-[#DCE5F0] bg-[#F0F5FA] px-2 text-sm font-medium text-[#456184]">
-                  {unit}
+          {fields.map(
+            ({ key, label, unit, value, range, icon: Icon, iconClass }) => (
+              <label
+                key={key}
+                className="!font-[sans-serif] !normal-case rounded-lg border border-[#DCE5F0] p-3.5"
+              >
+                <span
+                  className={`grid h-[48px] w-[48px] place-items-center rounded-lg ${iconClass}`}
+                >
+                  <Icon size={26} strokeWidth={2.2} />
                 </span>
-              </span>
-              <span className=" mt-2 block text-[12px] text-[#607897]">{range}</span>
-            </label>
-          ))}
+                <span className="mt-2 block text-[0.9rem] font-light text-[#152642]">
+                  {label}
+                  {key !== "pressure" && (
+                    <em className="ml-1 not-italic text-[#EF233C]">*</em>
+                  )}
+                </span>
+                <span className="mt-3 flex h-10 overflow-hidden rounded-lg border border-[#DCE5F0] bg-white">
+                  <input
+                    type="number"
+                    step="any"
+                    min="0"
+                    required={key !== "pressure"}
+                    value={values[key]}
+                    onChange={(event) => updateValue(key, event.target.value)}
+                    className=" !m-0 !min-h-0 !min-w-0 flex-1 !rounded-none !border-0 !px-3 text-[15px] text-[#456184] outline-none"
+                  />
+                  <span className=" grid min-w-[55px] place-items-center border-l border-[#DCE5F0] bg-[#F0F5FA] px-2 text-sm font-medium text-[#456184]">
+                    {unit}
+                  </span>
+                </span>
+                <span className=" mt-2 block text-[12px] text-[#607897]">
+                  {range}
+                </span>
+              </label>
+            ),
+          )}
         </div>
         <div className="mt-6 flex items-center justify-between gap-4">
           <button
@@ -132,7 +153,11 @@ export const LaboratoryEnvironment = () => {
             <ArrowRight size={18} />
           </button>
         </div>
-        {error && <p className="mt-3 text-right text-xs font-medium text-[#DC2626]">{error}</p>}
+        {error && (
+          <p className="mt-3 text-right text-xs font-medium text-[#DC2626]">
+            {error}
+          </p>
+        )}
       </form>
     </section>
   );

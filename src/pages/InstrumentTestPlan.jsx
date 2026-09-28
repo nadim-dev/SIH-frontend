@@ -31,6 +31,7 @@ const rules = {
   ECCENTRICITY: "Always applicable",
   TARE: "Tare device present",
   TEMPERATURE_INFLUENCE: "Always applicable",
+  SENSITIVITY: "Digital indication and d ≥ 5 mg",
   ENDURANCE: "Class II/III/IIII and Max ≤ 100 kg",
   ELECTRONIC_TESTS: "Electronic instrument",
 };

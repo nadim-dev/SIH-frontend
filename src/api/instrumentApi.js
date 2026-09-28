@@ -26,6 +26,9 @@ export const getGeneratedReportApi = (applicationId) =>
   axiosWithCreds.get(`/api/instruments/${encodeURIComponent(applicationId)}/report`);
 export const getGeneratedReportsApi = () => axiosWithCreds.get("/api/instruments/supervisor-reports");
 export const getAllGeneratedReportsAdminApi = () => axiosWithCreds.get("/api/instruments/admin/generated-reports");
+export const getTestDraftApi = (draftKey) => axiosWithCreds.get(`/api/test-drafts/${encodeURIComponent(draftKey)}`);
+export const saveTestDraftApi = (draftKey, data) => axiosWithCreds.put(`/api/test-drafts/${encodeURIComponent(draftKey)}`, { data });
+export const deleteTestDraftApi = (draftKey) => axiosWithCreds.delete(`/api/test-drafts/${encodeURIComponent(draftKey)}`);
 export const verifyReportApi = (reportId) => axiosWithoutCreds.get(`/api/instruments/reports/verify/${encodeURIComponent(reportId)}`);
 export const getMyNotificationsApi = () => axiosWithCreds.get("/api/notifications");
 export const markNotificationReadApi = (notificationId) => axiosWithCreds.patch(`/api/notifications/${notificationId}/read`);
@@ -81,6 +84,10 @@ export const getEccentricityTestConfigApi = (instrumentId) =>
   axiosWithCreds.get(`/api/instruments/${instrumentId}/eccentricity-test/config`);
 export const getTareTestConfigApi = (instrumentId) =>
   axiosWithCreds.get(`/api/instruments/${instrumentId}/tare-test/config`);
+export const getSensitivityTestConfigApi = (instrumentId) =>
+  axiosWithCreds.get(`/api/instruments/${instrumentId}/sensitivity-test/config`);
+export const submitSensitivityTestApi = (instrumentId, payload) =>
+  axiosWithCreds.post(`/api/instruments/${instrumentId}/submit-sensitivity`, payload);
 export const submitTareTestApi = (instrumentId, payload) =>
   axiosWithoutCreds.post(`/api/instruments/${instrumentId}/submit-tare`, payload);
 export const completeUnimplementedTestApi = (instrumentId, code) =>

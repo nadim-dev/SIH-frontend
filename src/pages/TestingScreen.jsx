@@ -4,6 +4,7 @@ import Decimal from 'decimal.js';
 import { getWeighingTestConfigApi, uploadWeighingEvidenceApi, deleteWeighingEvidenceApi, submitInstrumentObservationsApi, createNonComplianceReportApi } from '../api/instrumentApi';
 import NonComplianceReportModal from '../components/NonComplianceReportModal';
 import EvidenceUpload from '../components/EvidenceUpload';
+import { OfflineTestDraftControl, useOfflineTestDraft } from '../components/OfflineTestDraftSync';
 
 Decimal.set({ precision: 28, rounding: Decimal.ROUND_HALF_UP });
 
@@ -16,7 +17,9 @@ export const TestingScreen = () => {
 
   const [instrument, setInstrument] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [readings, setReadings] = useState({});
+  const draftSync = useOfflineTestDraft(`weighing-${id}`, {});
+  const readings = draftSync.draft;
+  const setReadings = draftSync.setDraft;
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState('');
   const [showNcrForm, setShowNcrForm] = useState(false);
@@ -42,8 +45,6 @@ export const TestingScreen = () => {
         const config = res.data;
         setInstrument({ ...config.instrument, testPoints: config.testPoints });
 
-        // Initialize state for inputs
-        setReadings({});
       } catch (err) {
         setServerError(err.response?.data?.error || 'Failed to load test configuration.');
       } finally {
@@ -173,6 +174,7 @@ export const TestingScreen = () => {
         readings: calculatedGrid,
         overallResult: allPassed ? 'PASS' : 'FAIL',
       });
+      await draftSync.clearDraft();
       navigate(`/testing/${applicationNumber || id}/test-execution`);
     } catch (err) {
       setServerError(err.response?.data?.error || 'Failed to submit test results.');
@@ -190,6 +192,7 @@ export const TestingScreen = () => {
       <div className="testing-heading-row">
         <h1 className="testing-title text-[1rem]">Weighing Performance Test</h1>  
       </div>
+      <OfflineTestDraftControl enabled={draftSync.enabled} online={draftSync.online} status={draftSync.status} onEnable={draftSync.enableSync} onSync={draftSync.syncNow} />
       <p className="testing-meta">
         <strong>Scale:</strong> {instrument.instrumentType} | <strong>Manufacturer:</strong> {instrument.manufacturer} | <strong>Model:</strong> {instrument.modelNumber} | <strong>Class:</strong> {instrument.accuracyClass} | <strong>Max:</strong> {instrument.max} {instrument.unit} | <strong>e:</strong> {instrument.e} {instrument.unit}
       </p>
@@ -301,6 +304,7 @@ export const TestingScreen = () => {
       onClose={() => setShowNcrForm(false)}
       onSubmit={async (payload) => {
         await submitInstrumentObservationsApi(id, { readings: calculatedGrid, overallResult: "FAIL" });
+        await draftSync.clearDraft();
         return createNonComplianceReportApi({ ...payload, testType: "WEIGHING_PERFORMANCE" });
       }}
       onSubmitted={() => navigate("/testing-person/dashboard")}

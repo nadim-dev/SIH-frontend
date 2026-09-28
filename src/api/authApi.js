@@ -16,6 +16,8 @@ export const deleteTestingOfficerApi = (userId) => axiosWithCreds.delete(`/api/a
 export const deactivateTestingOfficerApi = (userId) => axiosWithCreds.patch(`/api/auth/testing-officers/${encodeURIComponent(userId)}/deactivate`);
 export const activateTestingOfficerApi = (userId) => axiosWithCreds.patch(`/api/auth/testing-officers/${encodeURIComponent(userId)}/activate`);
 export const getLaboratoriesApi = () => axiosWithCreds.get("/api/laboratories");
+export const getLaboratoriesUsingCurrentOimlVersionApi = () => axiosWithCreds.get("/api/laboratories/oiml-standards");
+export const getAdminLaboratoryProfileApi = (labId) => axiosWithCreds.get(`/api/laboratories/${encodeURIComponent(labId)}/profile`);
 export const getMyLaboratoryProfileApi = () => axiosWithCreds.get("/api/laboratories/my/profile");
 export const updateMyLaboratoryProfileApi = (data) => {
   const formData = new FormData();

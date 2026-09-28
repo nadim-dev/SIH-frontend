@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { createNonComplianceReportApi, getEccentricityTestConfigApi, submitEccentricityObservationsApi, uploadWeighingEvidenceApi, deleteWeighingEvidenceApi } from "../../api/instrumentApi";
 import NonComplianceReportModal from "../../components/NonComplianceReportModal";
 import EvidenceUpload from "../../components/EvidenceUpload";
+import { OfflineTestDraftControl, useOfflineTestDraft } from "../../components/OfflineTestDraftSync";
 
 
 export const EccentricityTestScreen = () => {
@@ -13,7 +14,9 @@ export const EccentricityTestScreen = () => {
   const [filled, setFilled] = useState(true);
   const [positions, setPositions] = useState([]);
   const [testConfig, setTestConfig] = useState(null);
-  const [indications, setIndications] = useState({});
+  const draftSync = useOfflineTestDraft(`eccentricity-${id}`, {});
+  const indications = draftSync.draft;
+  const setIndications = draftSync.setDraft;
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [showNcrForm, setShowNcrForm] = useState(false);
@@ -25,13 +28,24 @@ export const EccentricityTestScreen = () => {
         const config = response.data?.data || response.data;
         setTestConfig(config);
         const decimalText = (value) => value && typeof value === "object" ? value.$numberDecimal ?? String(value) : value ?? "";
-        setPositions((config.points || []).map((point) => [String(point.step), point.label, decimalText(point.loadApplied), decimalText(point.indication), "", "", ""]));
+        setPositions((current) => current.length ? current : (config.points || []).map((point) => [String(point.step), point.label, decimalText(point.loadApplied), decimalText(indications[String(point.step)] ?? point.indication), "", "", ""]));
       } catch (err) {
         setError(err.response?.data?.message || "Failed to load eccentricity test points.");
       }
     };
     loadConfig();
   }, [id]);
+
+  React.useEffect(() => {
+    if (!testConfig || !Object.keys(indications).length) return;
+    setPositions((current) => current.map((row) => {
+      const savedIndication = indications[row[0]];
+      if (savedIndication === undefined || row[3] === savedIndication) return row;
+      const nextRow = [...row];
+      nextRow[3] = savedIndication;
+      return nextRow;
+    }));
+  }, [indications, testConfig]);
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -45,6 +59,7 @@ export const EccentricityTestScreen = () => {
           deltaL: Number(row[4]),
         })),
       });
+      await draftSync.clearDraft();
       navigate(applicationNumber ? `/testing/${applicationNumber}/test-execution` : `/testing/${id}/test-execution`);
     } catch (err) {
       setError(
@@ -111,6 +126,7 @@ export const EccentricityTestScreen = () => {
             </p>
           </div>
         </div>
+        <OfflineTestDraftControl enabled={draftSync.enabled} online={draftSync.online} status={draftSync.status} onEnable={draftSync.enableSync} onSync={draftSync.syncNow} />
 
         <div className="eccentricity-content">
           <div className="platform-panel">
@@ -228,6 +244,7 @@ export const EccentricityTestScreen = () => {
               testLoad: testConfig.testLoad,
               positions: positions.map((row, index) => ({ step: index + 1, indicated: Number(row[3]), deltaL: Number(row[4]) })),
             });
+            await draftSync.clearDraft();
             return createNonComplianceReportApi({ ...payload, testType: "ECCENTRICITY" });
           }}
           onSubmitted={() => navigate("/testing-person/dashboard")}

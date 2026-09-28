@@ -115,6 +115,10 @@ export const SupervisorReport = () => {
     );
   const instrument = report.instrumentDetails || {};
   const results = report.testResults || {};
+  const sensitivityInPlan = (report.testPlan?.tests || []).some((test) => test.code === "SENSITIVITY" || /sensitivity/i.test(test.name || ""));
+  const reportResults = sensitivityInPlan && !results.sensitivityTest
+    ? { ...results, sensitivityTest: { passed: null, points: [] } }
+    : results;
   const isNonCompliant = report.complianceStatus === "NON_COMPLIANT";
   const manufacturerName = instrument.manufacturer || "Maharashtra Instruments";
   const companySlug = manufacturerName.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 32) || "manufacturer";
@@ -232,7 +236,7 @@ export const SupervisorReport = () => {
         <PhotoSection instrument={instrument} results={results} />
         </div>
         <StandardsAndEnvironment results={results} report={report} />
-        <CompletedTests results={results} />
+        <CompletedTests results={reportResults} />
         <FindingsAndEvaluation results={results} report={report} />
         <SignaturesAndAttachments report={report} instrument={instrument} />
         <div className="mb-4 text-center"><div className="h-px w-full bg-slate-300" /><p className="m-0 pt-2 text-[10px] font-light tracking-wide text-[#172033]">System-generated report from NAWI Pro</p></div>
@@ -281,6 +285,7 @@ const CompletedTests = ({ results }) => {
     ["Eccentricity", results.eccentricityTest],
     ["Repeatability", results.repeatabilityTest],
     ["Tare Test", results.tareTest],
+    ["Sensitivity Test", results.sensitivityTest],
     ["Temperature Influence", results.temperatureInfluenceTest || results.temperatureTest],
   ].filter(([, test]) => test);
   return <section className="m-3 overflow-hidden rounded-md border border-slate-200"><SectionTitle icon={FileText} title="5. Completed Tests & Results" /><div className="space-y-3 bg-slate-50 px-0 pb-0 pt-2">{tests.length ? tests.map(([name, test]) => <TestTable key={name} name={name} test={test} />) : <div className="bg-white px-3 py-4 text-center text-[10px] text-slate-500">No completed test results available.</div>}</div></section>;
@@ -300,7 +305,8 @@ const TestTable = ({ name, test }) => {
     : repeatabilityMpe
     ? [...availableColumns.filter((key) => key !== "mpeLimit"), "mpeLimit"]
     : availableColumns.slice(0, 7);
-  return <div className="overflow-hidden rounded-md border border-slate-200 bg-white"><div className="flex items-center justify-between bg-[#f5f8fc] px-3 py-2"><strong className="text-[12px] text-[#17345a]">{name}</strong><span className={`rounded-md px-2 py-1 text-[10px] font-bold ${test.passed ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>{test.passed ? "PASS" : "FAIL"}</span></div>{rows.length ? <div className="overflow-auto"><table className="w-full min-w-[620px] border-collapse text-left text-[10px]"><thead className="bg-white text-slate-600"><tr>{columns.map((column) => <th key={column} className="border-b border-r border-slate-200 px-3 py-2 text-[11px] font-extrabold tracking-[.1px] last:border-r-0">{formatLabel(column)}</th>)}</tr></thead><tbody>{rows.map((row, index) => {
+  const testPending = test.passed == null && rows.length === 0;
+  return <div className="overflow-hidden rounded-md border border-slate-200 bg-white"><div className="flex items-center justify-between bg-[#f5f8fc] px-3 py-2"><strong className="text-[12px] text-[#17345a]">{name}</strong><span className={`rounded-md px-2 py-1 text-[10px] font-bold ${testPending ? "bg-slate-100 text-slate-600" : test.passed ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>{testPending ? "PENDING" : test.passed ? "PASS" : "FAIL"}</span></div>{rows.length ? <div className="overflow-auto"><table className="w-full min-w-[620px] border-collapse text-left text-[10px]"><thead className="bg-white text-slate-600"><tr>{columns.map((column) => <th key={column} className="border-b border-r border-slate-200 px-3 py-2 text-[11px] font-extrabold tracking-[.1px] last:border-r-0">{formatLabel(column)}</th>)}</tr></thead><tbody>{rows.map((row, index) => {
     const rowFailed = row.passed === false;
     return <tr key={row._id || index} className="border-b border-slate-100 last:border-0">{columns.map((column) => {
       const highlightFailedValue = rowFailed && [errorColumn, mpeColumn].includes(column);
@@ -309,7 +315,7 @@ const TestTable = ({ name, test }) => {
       const value = column === "mpe" || column === "mpeLimit" ? `±${displayValue(repeatabilityMpe && column === "mpeLimit" ? test.mpeLimit : row[column])}` : displayValue(row[column]);
       return <td key={column} className={cellTone}><span className={valueTone}>{value}</span></td>;
     })}</tr>;
-  })}</tbody></table></div> : <p className="m-0 px-3 py-3 text-[10px] text-slate-500">No detailed readings available.</p>}</div>;
+  })}</tbody></table></div> : <p className="m-0 px-3 py-3 text-[10px] text-slate-500">{testPending ? "Included in the test plan; readings have not been recorded." : "No detailed readings available."}</p>}</div>;
 };
 
 const formatLabel = (value) => value === "stepIndex" || value === "step" || value === "label" ? "Test Position" : value === "netLoad" ? "Test Load (kg)" : value === "correctedErrorEc" || value === "correctedError" ? "Corrected Error (kg)" : value === "deltaL" ? "Delta L (kg)" : value === "trueP" || value === "p" ? "P (kg)" : value === "mpeLimit" || value === "mpe" ? "MPE Limit (kg)" : value === "load" || value === "loadApplied" || value === "indicated" || value === "indication" ? `${value === "loadApplied" ? "Load Applied" : value === "indication" ? "Indication" : value.replace(/^./, (letter) => letter.toUpperCase())} (kg)` : value.replace(/([A-Z])/g, " $1").replace(/^./, (letter) => letter.toUpperCase());

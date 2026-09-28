@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import getInitials from "../utils/getInitial";
 import { logoutApi } from "../api/authApi";
 import { getMyNotificationsApi } from "../api/instrumentApi";
+import NetworkStatusIndicator from "./NetworkStatusIndicator";
 
 export function Header({ user,title,subtitle,setCurrentUser}) {
   const [isOpen, setIsOpen] = useState(false);
@@ -72,6 +73,7 @@ export function Header({ user,title,subtitle,setCurrentUser}) {
        
       </div>
       <div className="nawi-header-actions">
+        <NetworkStatusIndicator />
         <button
           type="button"
           className="nawi-icon-button relative mr-3"

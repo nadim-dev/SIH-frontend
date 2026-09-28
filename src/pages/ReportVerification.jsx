@@ -93,6 +93,15 @@ export const ReportVerification = () => {
             <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold ${isValid ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800"}`}><ShieldCheck size={13} />{isValid ? "VERIFIED" : "UNVERIFIED"}</span>
           </div>
 
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            {details.map(([label, value]) => (
+              <div key={label} className="rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3">
+                <p className="m-0 text-[10px] font-semibold uppercase tracking-wider text-slate-400">{label}</p>
+                <p className="m-0 mt-1.5 break-words text-sm font-semibold text-slate-800">{value || "Not available"}</p>
+              </div>
+            ))}
+          </div>
+
           <div className="mt-4 flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3">
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-700"><Building2 size={18} /></span>
             <div className="min-w-0">
@@ -121,15 +130,6 @@ export const ReportVerification = () => {
               <p className="mb-0 mt-2 rounded-lg border border-dashed border-slate-200 px-3.5 py-3 text-xs text-slate-500">Test-level results are unavailable in this report record.</p>
             )}
           </section>
-
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            {details.map(([label, value]) => (
-              <div key={label} className="rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3">
-                <p className="m-0 text-[10px] font-semibold uppercase tracking-wider text-slate-400">{label}</p>
-                <p className="m-0 mt-1.5 break-words text-sm font-semibold text-slate-800">{value || "Not available"}</p>
-              </div>
-            ))}
-          </div>
 
           <p className="mb-0 mt-6 flex items-start gap-2 border-t border-slate-100 pt-4 text-[11px] leading-5 text-slate-500"><CalendarDays size={14} className="mt-0.5 shrink-0 text-slate-400" />This page confirms the report record stored by NAWI Pro. Use the report number above when contacting the issuing laboratory.</p>
         </div>

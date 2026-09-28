@@ -1,4 +1,4 @@
-import { AlertTriangle, Bell, Bot, Building2, ChevronRight, ClipboardList, FileClock, FileText, House, Users } from "lucide-react";
+import { AlertTriangle, Bell, BookOpenCheck, Bot, Building2, ChevronRight, ClipboardList, FileClock, FileText, House, Users } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useContext } from "react";
 import nawiIcon from "../assets/nawi-icon.png";
@@ -16,6 +16,7 @@ const adminNavigation = [
   { label: "Laboratories", to: "/admin/laboratories", icon: Building2 },
   { label: "Users", to: "/admin/users", icon: Users },
   { label: "Reports", to: "/admin/reports", icon: FileText },
+  { label: "OIML Standards", to: "/admin/oiml-standards", icon: BookOpenCheck },
   { label: "Audit Logs", to: "/admin/audit-logs", icon: FileClock },
   { label: "Notifications", to: "/admin/notifications", icon: Bell },
 ];

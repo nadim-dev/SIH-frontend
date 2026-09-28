@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { createNonComplianceReportApi, getTareTestConfigApi, submitTareTestApi, uploadWeighingEvidenceApi, deleteWeighingEvidenceApi } from "../../api/instrumentApi";
 import EvidenceUpload from "../../components/EvidenceUpload";
 import NonComplianceReportModal from "../../components/NonComplianceReportModal";
+import { OfflineTestDraftControl, useOfflineTestDraft } from "../../components/OfflineTestDraftSync";
 
 export const TareTest = () => {
   const { id } = useParams();
@@ -11,7 +12,9 @@ export const TareTest = () => {
   const applicationNumber = searchParams.get("applicationNumber");
   const [config, setConfig] = React.useState(null);
   const [error, setError] = React.useState("");
-  const [indications, setIndications] = React.useState({});
+  const draftSync = useOfflineTestDraft(`tare-${id}`, {});
+  const indications = draftSync.draft;
+  const setIndications = draftSync.setDraft;
   const [submitting, setSubmitting] = React.useState(false);
   const [showNcrForm, setShowNcrForm] = React.useState(false);
   const decimalText = (value) =>
@@ -41,7 +44,7 @@ export const TareTest = () => {
     config?.points?.length && passedPoints.length === config.points.length,
   );
   const failedItems = (config?.points || []).filter((point) => hasReading(point) && !pointPassed(point)).map((point) => ({ key: `tare-${point.step}`, label: `Tare test step ${point.step} failed (error ${pointError(point)?.toFixed(4)} ${config.instrument?.unit}, MPE ±${decimalText(point.mpeLimit)} ${config.instrument?.unit})` }));
-  const submit = async () => { setSubmitting(true); try { await submitTareTestApi(id, { readings: config.points.map((point) => ({ indication: Number(indications[point.step]) })) }); const targetApplication = applicationNumber || config.applicationNumber; navigate(targetApplication ? `/testing/${targetApplication}/test-execution` : `/testing/${id}/test-execution`); } catch (err) { setError(err.response?.data?.message || "Failed to submit tare test."); } finally { setSubmitting(false); } };
+  const submit = async () => { setSubmitting(true); try { await submitTareTestApi(id, { readings: config.points.map((point) => ({ indication: Number(indications[point.step]) })) }); await draftSync.clearDraft(); const targetApplication = applicationNumber || config.applicationNumber; navigate(targetApplication ? `/testing/${targetApplication}/test-execution` : `/testing/${id}/test-execution`); } catch (err) { setError(err.response?.data?.message || "Failed to submit tare test."); } finally { setSubmitting(false); } };
 
   React.useEffect(() => {
     getTareTestConfigApi(id)
@@ -59,6 +62,7 @@ export const TareTest = () => {
     <main className="testing-page">
       <section className="testing-shell">
         <h1 className="testing-title">TARE TEST</h1>
+        <OfflineTestDraftControl enabled={draftSync.enabled} online={draftSync.online} status={draftSync.status} onEnable={draftSync.enableSync} onSync={draftSync.syncNow} />
         <p className="testing-meta">
           Tare Device: {config.instrument?.tareDevice} | Type: {config.tareType}{" "}
           | Maximum Tare: {decimalText(config.maximumTare)}{" "}
@@ -154,6 +158,7 @@ export const TareTest = () => {
         onClose={() => setShowNcrForm(false)}
         onSubmit={async (payload) => {
           await submitTareTestApi(id, { readings: config.points.map((point) => ({ indication: Number(indications[point.step]) })) });
+          await draftSync.clearDraft();
           return createNonComplianceReportApi({ ...payload, testType: "TARE" });
         }}
         onSubmitted={() => navigate("/testing-person/dashboard")}

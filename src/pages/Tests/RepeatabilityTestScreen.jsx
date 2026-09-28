@@ -3,6 +3,7 @@ import { useNavigate, useOutletContext, useParams, useSearchParams } from "react
 import { getRepeatabilityTestConfigApi, submitRepeatabilityObservationsApi, createNonComplianceReportApi, uploadWeighingEvidenceApi, deleteWeighingEvidenceApi} from "../../api/instrumentApi";
 import NonComplianceReportModal from "../../components/NonComplianceReportModal";
 import EvidenceUpload from "../../components/EvidenceUpload";
+import { OfflineTestDraftControl, useOfflineTestDraft } from "../../components/OfflineTestDraftSync";
 
 export const RepeatabilityTestScreen = () => {
   const { setHeaderContent } = useOutletContext();
@@ -21,11 +22,13 @@ export const RepeatabilityTestScreen = () => {
     });
   }, [setHeaderContent]);
   const [config, setConfig] = React.useState(null);
-  const [runs, setRuns] = React.useState([
+  const draftSync = useOfflineTestDraft(`repeatability-${id}`, [
     { indicated: "" },
     { indicated: "" },
     { indicated: "" },
   ]);
+  const runs = draftSync.draft;
+  const setRuns = draftSync.setDraft;
 
   React.useEffect(() => {
     getRepeatabilityTestConfigApi(id)
@@ -39,9 +42,9 @@ export const RepeatabilityTestScreen = () => {
 
   React.useEffect(() => {
     if (config?.numberOfRuns && config.numberOfRuns !== runs.length) {
-      setRuns(Array.from({ length: config.numberOfRuns }, () => ({ indicated: "" })));
+      setRuns((current) => Array.from({ length: config.numberOfRuns }, (_, index) => current[index] || ({ indicated: "" })));
     }
-  }, [config?.runCount]);
+  }, [config?.numberOfRuns]);
 
   const calculatedRuns = runs.map((run, index) => {
     const indicated = Number(run.indicated);
@@ -51,7 +54,7 @@ export const RepeatabilityTestScreen = () => {
   const validRuns = calculatedRuns.filter((run) => run.valid);
   const pValues = validRuns.map((run) => run.indication);
   const variationRange = pValues.length === runs.length ? Math.max(...pValues) - Math.min(...pValues) : null;
-  const passed = variationRange !== null && variationRange <= Number(config.mpe);
+  const passed = variationRange !== null && config?.mpe != null && variationRange <= Number(config.mpe);
   const canSubmit = validRuns.length === runs.length;
   const canGenerateNcr = canSubmit && !passed;
 
@@ -63,6 +66,7 @@ export const RepeatabilityTestScreen = () => {
         testLoad: config.testLoad,
         runs: runs.map((run) => ({ indication: Number(run.indicated) })),
       });
+      await draftSync.clearDraft();
       navigate(applicationNumber ? `/testing/${applicationNumber}/test-execution` : `/testing/${id}/test-execution`);
     } catch (err) {
       setError(
@@ -74,7 +78,7 @@ export const RepeatabilityTestScreen = () => {
       setSubmitting(false);
     }
   };
-  if (!config) return <main className="repeatability-page"><section className="repeatability-shell">Loading repeatability test...</section></main>;
+  if (!config) return <main className="repeatability-page"><section className="repeatability-shell">{error || "Loading repeatability test..."}</section></main>;
 
   return (
     <main className="repeatability-page">
@@ -83,6 +87,7 @@ export const RepeatabilityTestScreen = () => {
           <div>
             <h1>Repeatability Test </h1>
             <p>Scale: {config.instrument.instrumentType} | {config.instrument.manufacturer} ({config.instrument.modelNumber}) | Class: {config.instrument.accuracyClass} | Test Load: {config.testLoad} {config.instrument.unit} (80% Max) | e: {config.instrument.e} {config.instrument.unit}</p>
+            <OfflineTestDraftControl enabled={draftSync.enabled} online={draftSync.online} status={draftSync.status} onEnable={draftSync.enableSync} onSync={draftSync.syncNow} />
           </div>
          
         </div>
@@ -159,6 +164,7 @@ export const RepeatabilityTestScreen = () => {
           onClose={() => setShowNcrForm(false)}
           onSubmit={async (payload) => {
             await submitRepeatabilityObservationsApi(id, { testLoad: config.testLoad, runs: runs.map((run) => ({ indication: Number(run.indicated) })) });
+            await draftSync.clearDraft();
             return createNonComplianceReportApi({ ...payload, testType: "REPEATABILITY" });
           }}
           onSubmitted={() => navigate("/testing-person/dashboard")}
