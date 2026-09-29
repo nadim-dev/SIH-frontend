@@ -50,7 +50,6 @@ const ActionCard = ({ icon: Icon, tone, title, description }) => (
   <button
     type="button"
     disabled
-    title="This action is not available yet"
     className="group flex w-full cursor-not-allowed items-center gap-5 rounded-lg border border-slate-200 bg-gradient-to-r from-slate-50 to-white px-4 py-4 text-left opacity-100 transition-colors hover:border-blue-200 hover:bg-blue-50/40 disabled:cursor-not-allowed"
   >
     <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-full ${tone}`}>
