@@ -225,7 +225,7 @@ export const InstrumentTestExecution = () => {
                     <TestIcon size={14} />
                   </span>
                   <span className="w-36 font-semibold text-slate-800">
-                    {test.name}
+                    {test.code === "SENSITIVITY" ? "Discrimination Test" : test.name}
                   </span>
                   <span
                     className={`rounded px-2 py-1 text-[10px] font-medium ${categoryClass[test.category] || "bg-slate-100 text-slate-600"}`}

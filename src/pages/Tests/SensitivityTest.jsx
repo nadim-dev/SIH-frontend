@@ -24,7 +24,7 @@ export const SensitivityTest = () => {
   const setRows = draftSync.setDraft;
 
   useEffect(() => {
-    setHeaderContent?.({ title: "Sensitivity Test", subtitle: "Digital discrimination check at three instrument load points." });
+    setHeaderContent?.({ title: "Discrimination Test", subtitle: "Check the instrument’s ability to respond to a small change in load." });
   }, [setHeaderContent]);
 
   useEffect(() => {
@@ -36,7 +36,7 @@ export const SensitivityTest = () => {
         setConfig(loaded);
         setRows((current) => current.length === 3 ? current : (loaded.points || []).map((point) => ({ step: point.step, initialIndication: "", finalIndication: "" })));
       })
-      .catch((requestError) => setError(requestError.data?.message || requestError.message || "Unable to load the sensitivity test."))
+      .catch((requestError) => setError(requestError.data?.message || requestError.message || "Unable to load the discrimination test."))
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [id]);
@@ -74,13 +74,13 @@ export const SensitivityTest = () => {
       await draftSync.clearDraft();
       navigate(applicationNumber ? `/testing/${applicationNumber}/test-execution` : `/testing/${id}/test-execution`);
     } catch (requestError) {
-      setError(requestError.data?.message || requestError.message || "Unable to submit the sensitivity test.");
+      setError(requestError.data?.message || requestError.message || "Unable to submit the discrimination test.");
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (loading) return <main className="p-6 text-center text-sm text-slate-500">Loading sensitivity test…</main>;
+  if (loading) return <main className="p-6 text-center text-sm text-slate-500">Loading discrimination test…</main>;
   if (error && !config) return <main role="alert" className="m-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</main>;
 
   return (
@@ -88,7 +88,7 @@ export const SensitivityTest = () => {
       <section className="mx-auto max-w-[1180px] space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
         <header className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="m-0 text-xl font-bold text-slate-900">Sensitivity Test</h1>
+            <h1 className="m-0 text-xl font-bold text-slate-900">Discrimination Test</h1>
             <p className="mb-0 mt-1 text-xs leading-5 text-slate-600">
               {config.instrument.instrumentType} · {config.instrument.manufacturer} {config.instrument.modelNumber} · Min {config.instrument.min} {config.instrument.unit} · Max {config.instrument.max} {config.instrument.unit} · d {config.scaleInterval} {config.instrument.unit}
             </p>
@@ -131,7 +131,7 @@ export const SensitivityTest = () => {
           <p className="m-0 text-xs text-slate-600">Overall result: <strong className={allPassed ? "text-emerald-700" : failedItems.length ? "text-rose-700" : "text-slate-500"}>{allPassed ? "PASS" : failedItems.length ? "FAIL" : "PENDING"}</strong></p>
           <div className="flex flex-wrap justify-end gap-2">
             {failedItems.length > 0 && <button type="button" onClick={() => setShowNcrForm(true)} className="inline-flex items-center gap-2 rounded-md border border-rose-200 bg-rose-50 px-4 py-2.5 text-xs font-bold text-rose-700 hover:bg-rose-100">Generate NCR Report</button>}
-            <button type="button" onClick={submit} disabled={!allPassed || submitting} className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400">{submitting && <LoaderCircle size={14} className="animate-spin" />}{submitting ? "Submitting…" : <><Save size={14} />Submit Sensitivity Test</>}</button>
+            <button type="button" onClick={submit} disabled={!allPassed || submitting} className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400">{submitting && <LoaderCircle size={14} className="animate-spin" />}{submitting ? "Submitting…" : <><Save size={14} />Submit Discrimination Test</>}</button>
           </div>
         </footer>
       </section>

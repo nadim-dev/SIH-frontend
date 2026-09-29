@@ -170,7 +170,7 @@ export const InstrumentTestPlan = () => {
                       {test.sequence}
                     </td>
                     <td className="px-3 py-2 font-semibold text-[#1f2d40]">
-                      {test.name}
+                      {test.code === "SENSITIVITY" ? "Discrimination Test" : test.name}
                     </td>
                     <td className="px-3 py-2">
                       <span
