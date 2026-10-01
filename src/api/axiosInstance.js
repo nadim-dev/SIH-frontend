@@ -1,7 +1,7 @@
 import axios from "axios";
 
-// Use the same-origin Netlify/Vite proxy so the session cookie is first-party.
-const BASE_URL = "/";
+// Call the backend directly. Keep this host in sync with the deployed API.
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://sih-backend-1-c1mr.onrender.com";
 const onSuccess = (response) => {
   return response.data;
 };
