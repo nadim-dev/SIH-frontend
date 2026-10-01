@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+// Use the same-origin Netlify/Vite proxy so the session cookie is first-party.
+const BASE_URL = "/";
 const onSuccess = (response) => {
   return response.data;
 };
