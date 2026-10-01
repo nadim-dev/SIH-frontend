@@ -14,7 +14,7 @@ export const TestingPersonDashboard = () => {
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     setHeaderContent({
-      title: `Good morning, ${currentUser.name.split(" ")[0]} 👋`,
+      title: "Tester Dashboard",
       subtitle: "Manage your NAWI testing activities and OIML R 76 evaluations",
     });
     const loadEvaluations = async () => {

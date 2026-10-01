@@ -88,10 +88,31 @@ function ProtectedLayout() {
 //   return <Navigate to={getDashboardPath(currentUser.role)} replace />;
 // }
 
+function HomeRedirect() {
+  const { currentUser, authLoading } = useAuth();
+
+  if (authLoading) return <Loader />;
+  if (!currentUser) return <Navigate to="/login" replace />;
+
+  const role = String(currentUser.role || "")
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, "_");
+  const dashboardByRole = {
+    NAWI_ADMIN: "/admin/dashbaord",
+    ADMIN: "/admin/dashbaord",
+    ADMINISTRATOR: "/admin/dashbaord",
+    LAB_SUPERVISOR: "/supervisor/dashbaord",
+    TESTING_OFFICER: "/testing-person/dashboard",
+  };
+
+  return <Navigate to={dashboardByRole[role] || "/login"} replace />;
+}
+
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <ProjectStatus />,
+    element: <HomeRedirect />,
   },
   { path: "/certificate/:number", element: <CertificateVerification /> },
   { path: "/verify-report/:reportId", element: <ReportVerification /> },
