@@ -21,7 +21,7 @@ export const InstrumentRegister = () => {
     tareDevice: "Yes",
     tareType: "Subtractive",
     maximumTare: "30",
-    hasPrintingDevice: "No",
+    hasPrintingDevice: "Yes",
     accuracy: "",
     unit: "kg",
     maxCapacity: "150",
@@ -71,18 +71,27 @@ export const InstrumentRegister = () => {
     try {
       const compressedFile = await compressImage(selectedFile);
       setFile(compressedFile);
-      setOcrLoading(true);
-      const result = await extractRegistrationNameplateOcrApi(compressedFile);
+    } catch (error) {
+      setFile(null);
+      setServerError(error.message || "Could not prepare this nameplate image.");
+    } finally {
+      e.target.value = "";
+    }
+  };
+
+  const handleExtractNameplate = async () => {
+    if (!file || ocrLoading) return;
+    setServerError("");
+    setOcrLoading(true);
+    try {
+      const result = await extractRegistrationNameplateOcrApi(file);
       setOcrFields(result?.data || result);
       setUploadedPhotoUrl(result?.nameplatePhotoUrl || "");
       setOcrEditMode(false);
     } catch (error) {
-      setFile(null);
-      setOcrFields(null);
-      setServerError(error.message || "Could not read this nameplate.");
+      setServerError(error.response?.data?.message || error.message || "Could not read this nameplate.");
     } finally {
       setOcrLoading(false);
-      e.target.value = "";
     }
   };
 
@@ -522,7 +531,18 @@ const validationState = useMemo(() => {
                 </figcaption>
               </figure>
             )}
-            {file && <p role="status" className="mt-2 text-xs font-semibold text-emerald-700">{ocrLoading ? "Uploading nameplate and extracting data..." : ocrFields ? "Nameplate uploaded. Review the extracted values below." : "Nameplate image ready."}</p>}
+            {file && (
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                <p role="status" className="text-xs font-semibold text-emerald-700">
+                  {ocrLoading ? "Extracting details from nameplate..." : ocrFields ? "Nameplate details extracted. Review them below." : "Nameplate image ready. Details can be entered manually."}
+                </p>
+                {!ocrFields && (
+                  <button type="button" onClick={handleExtractNameplate} disabled={ocrLoading} className="rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 disabled:cursor-wait disabled:opacity-60">
+                    {ocrLoading ? "Extracting..." : "Extract details from photo"}
+                  </button>
+                )}
+              </div>
+            )}
           </div>
           {ocrFields && (
             <div className="ocr-overlay fixed inset-0 z-[60] grid place-items-center p-4">
