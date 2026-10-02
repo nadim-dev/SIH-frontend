@@ -210,7 +210,10 @@ export const TestingPersonDashboard = () => {
                   const isNonCompliant =
                     e.complianceStatus === "NON_COMPLIANT" ||
                     e.complianceResult === "FAIL";
-                  const stage = isNonCompliant
+                  const correctionRequired = e.status === "CORRECTION_REQUIRED" || (e.reviewStatus === "CORRECTION_REQUIRED" && (e.correctionTestCodes || []).length > 0);
+                  const stage = correctionRequired
+                    ? "Correction Required"
+                    : isNonCompliant
                     ? "Non-Compliant"
                     : e.status === "DOCUMENTS_PENDING"
                       ? "Documents"
@@ -294,11 +297,15 @@ export const TestingPersonDashboard = () => {
                         <button
                           type="button"
                           onClick={() =>
-                            navigate(
-                              isFinal
+                            (() => {
+                              const officerId = new URLSearchParams(window.location.search).get("officerId");
+                              const query = officerId ? `?officerId=${encodeURIComponent(officerId)}` : "";
+                              navigate(isFinal
                                 ? `/testing/${e.applicationNumber}/report`
-                                : `/testing/${e.applicationNumber}/workflow${new URLSearchParams(window.location.search).get("officerId") ? `?officerId=${encodeURIComponent(new URLSearchParams(window.location.search).get("officerId"))}` : ""}`,
-                            )
+                                : correctionRequired
+                                  ? `/testing/${e.applicationNumber}/test-execution${query}`
+                                  : `/testing/${e.applicationNumber}/workflow${query}`);
+                            })()
                           }
                           className={
                             !isFinal && p < 100
@@ -311,6 +318,8 @@ export const TestingPersonDashboard = () => {
                               <Eye size={12} />
                               View Report
                             </>
+                          ) : correctionRequired ? (
+                            <>Fix returned tests <ArrowRight size={12} /></>
                           ) : p < 100 ? (
                             <>
                               Continue <ArrowRight size={12} />

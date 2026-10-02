@@ -11,6 +11,9 @@ export const SupervisorEvaluationReview = () => {
     [data, setData] = useState(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
+    [showCorrectionForm, setShowCorrectionForm] = useState(false),
+    [correctionTestCodes, setCorrectionTestCodes] = useState(() => new Set()),
+    [remarks, setRemarks] = useState(""),
     [selectedTest, setSelectedTest] = useState(null),
     [reviewedTests, setReviewedTests] = useState(() => new Set()),
     [reportGenerated, setReportGenerated] = useState(false),
@@ -27,9 +30,17 @@ export const SupervisorEvaluationReview = () => {
       .catch((e) => setError(e.message || "Unable to load review."));
   }, [applicationId, setHeaderContent]);
   const decide = async (d) => {
+    if (d === "REJECT" && correctionTestCodes.size === 0) {
+      setError("Select at least one test to return for correction.");
+      return;
+    }
+    if (d === "REJECT" && !remarks.trim()) {
+      setError("Add a correction reason for the testing officer.");
+      return;
+    }
     setBusy(true);
     try {
-      const response = await reviewSupervisorEvaluationApi(applicationId, d);
+      const response = await reviewSupervisorEvaluationApi(applicationId, d, remarks.trim(), [...correctionTestCodes]);
       if (d === "ACCEPT") {
         setGeneratedReportId(response.data?.data?.reportId || "");
         setReportGenerated(true);
@@ -48,6 +59,7 @@ export const SupervisorEvaluationReview = () => {
       </main>
     );
   const tests = data.testPlan?.tests || [];
+  const testedTests = tests.filter((test) => test.status === "COMPLETED");
   const inspection = data.inspection || {};
   const detailsFor = (code) => {
     const value = code === "GENERAL_EXAMINATION" ? inspection.generalExamination : code === "WEIGHING_PERFORMANCE" ? inspection.weighingTest : code === "REPEATABILITY" ? inspection.repeatabilityTest : code === "ECCENTRICITY" ? inspection.eccentricityTest : code === "TARE" ? inspection.tareTest : code === "SENSITIVITY" ? inspection.sensitivityTest : null;
@@ -135,36 +147,44 @@ export const SupervisorEvaluationReview = () => {
           {data.instrument?.modelNumber}
         </p> */}
         <div className="mt-5 overflow-hidden rounded-lg border border-slate-200">
-          <table className="w-full text-left text-xs">
+          <table className="w-full min-w-[900px] text-left text-xs">
             <thead className="bg-[#17345A] text-white">
               <tr>
                 <th className="p-3">Test</th>
                 <th className="p-3">Category</th>
                 <th className="p-3">Recorded Values &amp; Evidence</th>
                 <th className="p-3">Result</th>
+                {showCorrectionForm && <th className="p-3">Return</th>}
               </tr>
             </thead>
             <tbody>
-              {tests.map((t) => (
+              {showCorrectionForm && testedTests.length === 0 && <tr><td colSpan={5} className="p-4 text-center text-xs text-slate-500">No completed tests are available to return.</td></tr>}
+              {(showCorrectionForm ? testedTests : tests).map((t) => (
                 <tr key={t.code} className="border-t border-slate-200">
                   <td className="p-3 font-semibold">{t.code === "SENSITIVITY" ? "Discrimination Test" : t.name}</td>
                   <td className="p-3">{t.category || "—"}</td>
-                  <td className="p-3"><button type="button" onClick={() => openTestDetails(t)} className="cursor-pointer rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100">Review details</button></td><td className="p-3"><span className="flex w-full items-center justify-between gap-3">{t.status}{reviewedTests.has(t.code) && <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700" title="Details reviewed" aria-label="Details reviewed"><Check size={15} strokeWidth={3} /></span>}</span></td>
+                  <td className="p-3"><button type="button" onClick={() => openTestDetails(t)} className="cursor-pointer rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100">Review details</button></td><td className="p-3"><span className="flex w-full items-center justify-between gap-3">{t.status}{reviewedTests.has(t.code) && <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700" title="Details reviewed" aria-label="Details reviewed"><Check size={15} strokeWidth={3} /></span>}</span></td>{showCorrectionForm && <td className="p-3"><label className="inline-flex cursor-pointer items-center gap-2"><input type="checkbox" checked={correctionTestCodes.has(t.code)} onChange={(event) => setCorrectionTestCodes((current) => { const next = new Set(current); if (event.target.checked) next.add(t.code); else next.delete(t.code); return next; })} aria-label={`Return ${t.name} for correction`} /><span className="text-[11px]">Select</span></label></td>}
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        {showCorrectionForm && <label className="mt-4 block text-xs font-semibold text-slate-700">Correction reason
+          <textarea value={remarks} onChange={(event) => setRemarks(event.target.value)} rows={3} maxLength={1000} placeholder="Explain what the testing officer needs to correct." className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-xs font-normal outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+        </label>}
         {error && <p className="mt-3 text-xs text-red-600">{error}</p>}
         <div className="mt-5 flex justify-end gap-3">
-          <button
+          {!showCorrectionForm ? <button
             type="button"
             disabled={busy}
-            onClick={() => decide("REJECT")}
-            className="rounded-md border border-red-200 bg-red-50 px-4 py-2 text-xs font-bold text-red-700"
+            onClick={() => { setError(""); setCorrectionTestCodes(new Set()); setRemarks(""); setShowCorrectionForm(true); }}
+            className="rounded-md border border-red-200 bg-red-50 px-4 py-2 text-xs font-bold text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Return for Correction
-          </button>
+          </button> : <>
+            <button type="button" disabled={busy} onClick={() => { setShowCorrectionForm(false); setCorrectionTestCodes(new Set()); setRemarks(""); setError(""); }} className="rounded-md border border-slate-300 bg-white px-4 py-2 text-xs font-bold text-slate-700 disabled:opacity-50">Cancel</button>
+            <button type="button" disabled={busy || correctionTestCodes.size === 0 || !remarks.trim() || testedTests.length === 0} onClick={() => decide("REJECT")} className="rounded-md border border-red-200 bg-red-50 px-4 py-2 text-xs font-bold text-red-700 disabled:cursor-not-allowed disabled:opacity-50">Confirm Return</button>
+          </>}
           <button
             type="button"
             disabled={busy || !allTestsReviewed}

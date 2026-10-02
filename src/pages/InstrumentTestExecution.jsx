@@ -104,9 +104,17 @@ export const InstrumentTestExecution = () => {
     };
   }, [applicationId]);
   const tests = data?.testPlan?.tests || [];
-  const completed = tests.filter((test) => test.status === "COMPLETED").length;
-  const progress = tests.length
-    ? Math.round((completed / tests.length) * 100)
+  const correctionCodes = data?.evaluation?.correctionTestCodes || [];
+  const isCorrectionRound = data?.evaluation?.status === "CORRECTION_REQUIRED" || data?.evaluation?.reviewStatus === "CORRECTION_REQUIRED";
+  const workflowTests = tests;
+  const correctionTests = tests.filter((test) => correctionCodes.includes(test.code));
+  const correctionCompleted = correctionTests.filter((test) => test.status === "COMPLETED").length;
+  const completed = isCorrectionRound
+    ? correctionCompleted
+    : workflowTests.filter((test) => test.status === "COMPLETED").length;
+  const progressTotal = isCorrectionRound ? correctionTests.length : workflowTests.length;
+  const progress = progressTotal
+    ? Math.round((completed / progressTotal) * 100)
     : 0;
   if (loading)
     return (
@@ -122,7 +130,7 @@ export const InstrumentTestExecution = () => {
           <div className="flex flex-col items-center justify-center">
             <div className="relative grid h-16 w-16 place-items-center rounded-full border-[5px] border-slate-200 text-sm font-bold text-slate-800">
               <span>
-                {completed}/{tests.length}
+                {completed}/{workflowTests.length}
               </span>
             </div>
             <small className="mt-1 text-[10px] font-medium text-slate-800">Tests Completed</small>
@@ -138,8 +146,8 @@ export const InstrumentTestExecution = () => {
               </div>
               <b className="text-[12px] text-slate-700">{progress}%</b>
             </div>
-            <div className="mt-2 rounded-md bg-emerald-100 px-3 py-2 text-[12px] leading-5 font-semibold text-emerald-900">
-              <span className="mr-2 inline-grid h-4 w-4 place-items-center rounded-full bg-emerald-500 align-[-3px] text-white"><Check size={10} strokeWidth={3} /></span>You have completed {completed} out of {tests.length} tests. Continue with the next test.
+            <div className={`mt-2 rounded-md px-3 py-2 text-[12px] leading-5 font-semibold ${isCorrectionRound ? "bg-amber-100 text-amber-900" : "bg-emerald-100 text-emerald-900"}`}>
+              <span className="mr-2 inline-grid h-4 w-4 place-items-center rounded-full bg-emerald-500 align-[-3px] text-white"><Check size={10} strokeWidth={3} /></span>{isCorrectionRound ? `Correction required: ${data.evaluation?.supervisorRemarks || "Update the selected tests."} You have completed ${completed} of ${workflowTests.length} returned tests.` : `You have completed ${completed} out of ${tests.length} tests. Continue with the next test.`}
             </div>
           </div>
           <div className="flex items-center justify-around border-l border-slate-200 text-[11px] text-slate-500">
@@ -174,7 +182,7 @@ export const InstrumentTestExecution = () => {
               </span>
               <div>
                 <b className="block text-sm text-slate-800">
-                  Applicable Tests ({tests.length})
+                  Applicable Tests ({workflowTests.length})
                 </b>
                 <small className="text-[10px] text-slate-500">
                   Click on a test to record observations. Tests are based on
@@ -190,10 +198,13 @@ export const InstrumentTestExecution = () => {
             </div>
           </div>
           <div className="divide-y divide-slate-200">
-                {tests.map((test, index) => {
-              const status = test.status || "PENDING";
+              {workflowTests.map((test, index) => {
+              const isReturnedTest = correctionCodes.includes(test.code);
+              const status = isCorrectionRound && isReturnedTest ? "PENDING" : (test.status || "PENDING");
               const isCompleted = status === "COMPLETED";
-                  const isActive = !isCompleted && index === completed;
+                  const isActive = isCorrectionRound
+                    ? isReturnedTest
+                    : !isCompleted && index === completed;
                   const TestIcon = testIcons[test.code] || Gauge;
               return (
                 <button
@@ -258,10 +269,10 @@ export const InstrumentTestExecution = () => {
           >
             <ArrowLeft size={13} /> Back to Evaluation
           </button>
-          {!isSupervisor && <button
+          {!isSupervisor && progressTotal > 0 && <button
             type="button"
             onClick={submitForReview}
-            disabled={submittingReview || completed !== tests.length}
+            disabled={submittingReview || completed !== progressTotal}
             className="inline-flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-[10px] font-bold text-white"
           >
             {submittingReview ? "Submitting..." : "Submit For Review"} <ArrowRight size={13} />

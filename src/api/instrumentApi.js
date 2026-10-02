@@ -20,8 +20,8 @@ export const getSupervisorEvaluationsApi = (labId) =>
   axiosWithCreds.get("/api/instruments/supervisor-evaluations", { params: labId ? { labId } : undefined });
 export const getSupervisorDashboardSummaryApi = () =>
   axiosWithCreds.get("/api/instruments/supervisor-dashboard-summary");
-export const reviewSupervisorEvaluationApi = (applicationId, decision, remarks = "") =>
-  axiosWithCreds.patch(`/api/instruments/${encodeURIComponent(applicationId)}/supervisor-review`, { decision, remarks });
+export const reviewSupervisorEvaluationApi = (applicationId, decision, remarks = "", correctionTestCodes = []) =>
+  axiosWithCreds.patch(`/api/instruments/${encodeURIComponent(applicationId)}/supervisor-review`, { decision, remarks, correctionTestCodes });
 export const getGeneratedReportApi = (applicationId) =>
   axiosWithCreds.get(`/api/instruments/${encodeURIComponent(applicationId)}/report`);
 export const getGeneratedReportsApi = () => axiosWithCreds.get("/api/instruments/supervisor-reports");

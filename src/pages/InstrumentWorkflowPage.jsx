@@ -65,7 +65,9 @@ const workflowRoutes = {
 
 const getActiveStep = (evaluation) => {
   if (!evaluation) return 1;
+  const correctionRequired = evaluation.status === "CORRECTION_REQUIRED" || (evaluation.reviewStatus === "CORRECTION_REQUIRED" && (evaluation.correctionTestCodes || []).length > 0);
   if (evaluation.status === "COMPLETED") return 8;
+  if (correctionRequired) return 5;
   if (
     evaluation.status === "DOCUMENTS_PENDING" ||
     evaluation.status === "DOCUMENT_REVIEW"
@@ -76,8 +78,7 @@ const getActiveStep = (evaluation) => {
   if (evaluation.status === "TESTING" || evaluation.testingStatus !== "COMPLETED") return 5;
   if (evaluation.status === "COMPLIANCE_EVALUATION") return 6;
   if (
-    evaluation.status === "SUPERVISOR_REVIEW" ||
-    evaluation.status === "CORRECTION_REQUIRED"
+    evaluation.status === "SUPERVISOR_REVIEW"
   )
     return 7;
   return 8;
@@ -169,7 +170,8 @@ export const InstrumentWorkFlow = () => {
         {workflowSteps.map((step, index) => {
           const number = index + 1;
           const complianceFailed = step.key === "compliance" && evaluation.complianceStatus === "NON_COMPLIANT";
-          const testingIncomplete = step.key === "testing" && evaluation.testingStatus !== "COMPLETED";
+          const correctionRequired = evaluation.status === "CORRECTION_REQUIRED" || (evaluation.reviewStatus === "CORRECTION_REQUIRED" && (evaluation.correctionTestCodes || []).length > 0);
+          const testingIncomplete = step.key === "testing" && (correctionRequired || evaluation.testingStatus !== "COMPLETED");
           const isComplete = !complianceFailed && !testingIncomplete && (number < activeStep || (activeStep === 8 && number === 8));
           const isActive = number === activeStep && activeStep !== 8;
           const Icon = step.icon;
@@ -209,7 +211,7 @@ export const InstrumentWorkFlow = () => {
                       onClick={() => navigate(workflowRoutes.testing(applicationId, instrument._id))}
                       className="inline-flex cursor-pointer items-center gap-1 rounded bg-[#2563EB] px-3 py-2 text-xs font-semibold text-white"
                     >
-                      Continue <Play size={12} fill="currentColor" />
+                      {correctionRequired ? "Fix returned tests" : "Continue"} <Play size={12} fill="currentColor" />
                     </button>}
                   </>
                 ) : complianceFailed ? (
