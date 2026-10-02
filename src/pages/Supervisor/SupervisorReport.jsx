@@ -139,7 +139,9 @@ export const SupervisorReport = () => {
     report.evaluationId?.applicationNumber || applicationId;
   const reportNumber = `NAWI/TR/${applicationNumber.replace("NAWI-", "")}`;
   const reportDate = report.approvedAt || report.createdAt;
-  const verificationUrl = report.qrCode || `${window.location.origin}/verify-report/${report._id || report.evaluationId?._id || applicationNumber}`;
+  const verificationUrl = (report.qrCode || `${window.location.origin}/verify-report/${report._id || report.evaluationId?._id || applicationNumber}`)
+    .replace(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i, "https://nawipro.netlify.app")
+    .replace(/^https?:\/\/nawipro12\.netlify\.app/i, "https://nawipro.netlify.app");
   const qrUrl = `https://quickchart.io/qr?size=180&text=${encodeURIComponent(verificationUrl)}`;
   return (
     <main className="report-print-page min-h-full bg-[#f8fafc] p-3 text-[11px] text-[#172033]">

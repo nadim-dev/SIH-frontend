@@ -166,8 +166,8 @@ export const AdminDashbaord = () => {
       `${window.location.origin}/certificate/${certificate.certificateNumber}`
     ).replace(
       /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/,
-      "https://nawipro12.netlify.app",
-    );
+      "https://nawipro.netlify.app",
+    ).replace(/^https?:\/\/nawipro12\.netlify\.app/i, "https://nawipro.netlify.app");
     const qrUrl = `https://quickchart.io/qr?size=180&text=${encodeURIComponent(verificationUrl)}`;
     const report = `<!doctype html><html><head><title>${certificate.certificateNumber}</title><style>body{font-family:Arial;color:#172033;max-width:800px;margin:40px auto;padding:25px;border:8px double #17345a}h1{text-align:center;color:#17345a}h2{font-size:18px;border-bottom:1px solid #ddd;padding-bottom:8px}p{line-height:1.6}.label{color:#64748b;font-size:12px}.qr{text-align:center;margin-top:20px}.qr img{width:150px;height:150px}.qr small{display:block;color:#64748b}</style></head><body><h1>LEGAL METROLOGY</h1><h2>Certificate of Instrument Approval</h2><p><span class="label">Certificate number</span><br><strong>${certificate.certificateNumber}</strong></p><p><span class="label">Instrument</span><br><strong>${instrument.manufacturer || "—"} ${instrument.modelNumber || ""}</strong><br>Serial number: ${instrument.serialNumber || "—"}</p><table width="100%" cellpadding="10" border="1" cellspacing="0"><tr><th>Inspection module</th><th>Result</th></tr>${rows}</table><p>Issued: ${new Date(certificate.issueDate).toLocaleDateString()}<br>Valid until: ${new Date(certificate.validUntil).toLocaleDateString()}<br>Approved by: Administrator</p><div class="qr"><img src="${qrUrl}" alt="Certificate verification QR code"><small>Scan to verify this certificate</small></div><script>window.onload=()=>window.print()</script></body></html>`;
     const reportWindow = window.open("", "_blank");
