@@ -1,16 +1,32 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
-import { getMyEvaluationsApi, getTestingDashboardSummaryApi } from "../api/instrumentApi";
+import {
+  getMyEvaluationsApi,
+  getTestingDashboardSummaryApi,
+} from "../api/instrumentApi";
 import { formatDate } from "../utils/formatDate";
 import { getInstrumentImage } from "../utils/instrumentImage";
-import { ArrowRight, CheckCircle, Clock3, Eye, FileText, FlaskConical, Plus } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle,
+  Clock3,
+  Eye,
+  FileText,
+  FlaskConical,
+  Plus,
+} from "lucide-react";
 import { InstrumentEvaluationApi } from "../api/instrumentApi.js";
 
 export const TestingPersonDashboard = () => {
   const { setHeaderContent, currentUser } = useOutletContext();
   const navigate = useNavigate();
   const [evaluations, setEvaluations] = useState([]);
-  const [summary, setSummary] = useState({ registeredInstruments: 0, testsInProgress: 0, awaitingReview: 0, completedTests: 0 });
+  const [summary, setSummary] = useState({
+    registeredInstruments: 0,
+    testsInProgress: 0,
+    awaitingReview: 0,
+    completedTests: 0,
+  });
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     setHeaderContent({
@@ -19,15 +35,34 @@ export const TestingPersonDashboard = () => {
     });
     const loadEvaluations = async () => {
       try {
-        const officerId = new URLSearchParams(window.location.search).get("officerId");
+        const officerId = new URLSearchParams(window.location.search).get(
+          "officerId",
+        );
         const [evaluationsResult, summaryResult] = await Promise.allSettled([
           getMyEvaluationsApi(officerId),
           getTestingDashboardSummaryApi(officerId),
         ]);
-        if (evaluationsResult.status === "fulfilled") setEvaluations(evaluationsResult.value.data || []);
-        else console.error("Unable to load evaluations:", evaluationsResult.reason);
-        if (summaryResult.status === "fulfilled") setSummary(summaryResult.value.data || { registeredInstruments: 0, testsInProgress: 0, awaitingReview: 0, completedTests: 0 });
-        else console.error("Unable to load dashboard summary:", summaryResult.reason);
+        if (evaluationsResult.status === "fulfilled")
+          setEvaluations(evaluationsResult.value.data || []);
+        else
+          console.error(
+            "Unable to load evaluations:",
+            evaluationsResult.reason,
+          );
+        if (summaryResult.status === "fulfilled")
+          setSummary(
+            summaryResult.value.data || {
+              registeredInstruments: 0,
+              testsInProgress: 0,
+              awaitingReview: 0,
+              completedTests: 0,
+            },
+          );
+        else
+          console.error(
+            "Unable to load dashboard summary:",
+            summaryResult.reason,
+          );
       } catch (error) {
         console.error("Unable to load evaluations:", error);
       } finally {
@@ -106,7 +141,7 @@ export const TestingPersonDashboard = () => {
               <div className="mt-2 flex items-end justify-between pl-[56px]">
                 <strong className="text-2xl leading-none">{n}</strong>
                 <span className={`text-xs ${trendStyle}`}>
-                  {change && <>↗ {change}{" "}</>}
+                  {change && <>↗ {change} </>}
                   <small className="ml-1 text-[#475569]">{period}</small>
                 </span>
               </div>
@@ -115,7 +150,26 @@ export const TestingPersonDashboard = () => {
         )}
       </div>
       <section className="mt-5 rounded-lg border border-[#E2E8F0] bg-white p-4 shadow-sm">
-        <div className="flex items-start justify-between gap-4"><div><h2 className="text-lg font-bold text-[#0F1B33]">Instrument Evaluations</h2><p className="text-xs text-[#475569]">View and continue your instrument testing applications</p></div>{currentUser?.role !== "LAB SUPERVISOR" && <button type="button" onClick={() => navigate("/register/instrument")} className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-[#2563EB] px-3 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#1E88E5]"><Plus size={14} strokeWidth={2.5} />Register Instrument</button>}</div>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-bold text-[#0F1B33]">
+              Instrument Evaluations
+            </h2>
+            <p className="text-xs text-[#475569]">
+              View and continue your instrument testing applications
+            </p>
+          </div>
+          {currentUser?.role !== "LAB SUPERVISOR" && (
+            <button
+              type="button"
+              onClick={() => navigate("/register/instrument")}
+              className="inline-flex cursor-pointer shrink-0 items-center gap-1.5 rounded-md bg-[#2563EB]  px-3 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#1E88E5]"
+            >
+              <Plus size={14} strokeWidth={2.5} />
+              Register Instrument
+            </button>
+          )}
+        </div>
         <div className="mt-3 overflow-x-auto">
           <table className="w-full min-w-[720px] text-left text-[10px]">
             <thead className="bg-[#F1F5F9]">
@@ -153,32 +207,70 @@ export const TestingPersonDashboard = () => {
                   const i = e.instrumentId || {};
                   const p = e.progress || 0;
                   const isFinal = p >= 100;
-                  const isNonCompliant = e.complianceStatus === "NON_COMPLIANT" || e.complianceResult === "FAIL";
-                  const stage = isNonCompliant ? "Non-Compliant" : e.status === "DOCUMENTS_PENDING" ? "Documents" : e.status === "ENVIRONMENT_PENDING" ? "Environment" : e.status.replaceAll("_", " ");
-                  const sc =
-                    isNonCompliant
-                      ? "bg-[#FEF2F2] text-[#DC2626]"
-                      : e.status === "COMPLETED"
+                  const isNonCompliant =
+                    e.complianceStatus === "NON_COMPLIANT" ||
+                    e.complianceResult === "FAIL";
+                  const stage = isNonCompliant
+                    ? "Non-Compliant"
+                    : e.status === "DOCUMENTS_PENDING"
+                      ? "Documents"
+                      : e.status === "ENVIRONMENT_PENDING"
+                        ? "Environment"
+                        : e.status.replaceAll("_", " ");
+                  const sc = isNonCompliant
+                    ? "bg-[#FEF2F2] text-[#DC2626]"
+                    : e.status === "COMPLETED"
                       ? "bg-[#ECFDF5] text-[#059669]"
                       : e.status.includes("REVIEW")
                         ? "bg-[#F3E8FF] text-[#7C3AED]"
                         : e.status === "TESTING"
                           ? "bg-[#FFF7E6] text-[#B45309]"
                           : "bg-[#EFF6FF] text-[#2563EB]";
-                  const progressClass = isNonCompliant ? "bg-[#DC2626]" : e.status === "COMPLETED" ? "bg-[#10B981]" : e.status.includes("REVIEW") ? "bg-[#F43F5E]" : e.status === "TESTING" ? "bg-[#8B5CF6]" : e.status === "ENVIRONMENT_PENDING" ? "bg-[#F59E0B]" : "bg-[#2563EB]";
+                  const progressClass = isNonCompliant
+                    ? "bg-[#DC2626]"
+                    : e.status === "COMPLETED"
+                      ? "bg-[#10B981]"
+                      : e.status.includes("REVIEW")
+                        ? "bg-[#F43F5E]"
+                        : e.status === "TESTING"
+                          ? "bg-[#8B5CF6]"
+                          : e.status === "ENVIRONMENT_PENDING"
+                            ? "bg-[#F59E0B]"
+                            : "bg-[#2563EB]";
                   return (
                     <tr key={e._id} className="border-b border-[#E2E8F0]">
                       <td className="p-2">
-                        <strong className="block text-[11px] font-bold text-black">{e.applicationNumber}</strong>
-                        {e.status === "DOCUMENTS_PENDING" && <span className="mt-1 inline-block rounded bg-[#DBEAFE] px-1.5 py-0.5 text-[8px] font-semibold text-[#2563EB]">New</span>}
+                        <strong className="block text-[11px] font-bold text-black">
+                          {e.applicationNumber}
+                        </strong>
+                        {e.status === "DOCUMENTS_PENDING" && (
+                          <span className="mt-1 inline-block rounded bg-[#DBEAFE] px-1.5 py-0.5 text-[8px] font-semibold text-[#2563EB]">
+                            New
+                          </span>
+                        )}
                       </td>
                       <td className="p-2">
                         <div className="flex items-center gap-2.5">
-                          <img src={getInstrumentImage(i.instrumentType)} alt="" onError={(event) => { event.currentTarget.style.display = "none"; }} className="h-9 w-9 shrink-0 object-contain" />
-                          <div><strong className="font-bold text-[#0F1B33]">{i.instrumentType}</strong><br />Model: {i.modelNumber}</div>
+                          <img
+                            src={getInstrumentImage(i.instrumentType)}
+                            alt=""
+                            onError={(event) => {
+                              event.currentTarget.style.display = "none";
+                            }}
+                            className="h-9 w-9 shrink-0 object-contain"
+                          />
+                          <div>
+                            <strong className="font-bold text-[#0F1B33]">
+                              {i.instrumentType}
+                            </strong>
+                            <br />
+                            Model: {i.modelNumber}
+                          </div>
                         </div>
                       </td>
-                      <td className="p-2 font-semibold text-[#0F1B33]">{i.manufacturer}</td>
+                      <td className="p-2 font-semibold text-[#0F1B33]">
+                        {i.manufacturer}
+                      </td>
                       <td className="p-2 font-semibold text-[#0F1B33]">
                         {formatDate(e.createdAt)}
                       </td>
@@ -187,14 +279,48 @@ export const TestingPersonDashboard = () => {
                           ● {stage}
                         </span>
                       </td>
-                      <td className="p-2"><div className="flex items-center gap-2"><span className="h-1.5 w-16 overflow-hidden rounded-full bg-[#E2E8F0]"><span className={`block h-full rounded-full ${progressClass}`} style={{ width: `${p}%` }} /></span>{p}%</div></td>
+                      <td className="p-2">
+                        <div className="flex items-center gap-2">
+                          <span className="h-1.5 w-16 overflow-hidden rounded-full bg-[#E2E8F0]">
+                            <span
+                              className={`block h-full rounded-full ${progressClass}`}
+                              style={{ width: `${p}%` }}
+                            />
+                          </span>
+                          {p}%
+                        </div>
+                      </td>
                       <td className="p-2">
                         <button
                           type="button"
-                          onClick={() => navigate(isFinal ? `/testing/${e.applicationNumber}/report` : `/testing/${e.applicationNumber}/workflow${new URLSearchParams(window.location.search).get("officerId") ? `?officerId=${encodeURIComponent(new URLSearchParams(window.location.search).get("officerId"))}` : ""}`)}
-                          className={!isFinal && p < 100 ? "inline-flex  cursor-pointer items-center gap-1 rounded bg-[#2563EB] px-2.5 py-1.5 text-white hover:bg-[#1E88E5]" : "inline-flex items-center cursor-pointer gap-1 rounded border border-[#BFDBFE] px-2.5 py-1.5 text-[#2563EB]"}
+                          onClick={() =>
+                            navigate(
+                              isFinal
+                                ? `/testing/${e.applicationNumber}/report`
+                                : `/testing/${e.applicationNumber}/workflow${new URLSearchParams(window.location.search).get("officerId") ? `?officerId=${encodeURIComponent(new URLSearchParams(window.location.search).get("officerId"))}` : ""}`,
+                            )
+                          }
+                          className={
+                            !isFinal && p < 100
+                              ? "inline-flex  cursor-pointer items-center gap-1 rounded bg-[#2563EB] px-2.5 py-1.5 text-white hover:bg-[#1E88E5]"
+                              : "inline-flex items-center cursor-pointer gap-1 rounded border border-[#BFDBFE] px-2.5 py-1.5 text-[#2563EB]"
+                          }
                         >
-                          {isFinal ? <><Eye size={12} />View Report</> : p < 100 ? <>Continue <ArrowRight size={12} /></> : <><Eye size={12} />View</>}
+                          {isFinal ? (
+                            <>
+                              <Eye size={12} />
+                              View Report
+                            </>
+                          ) : p < 100 ? (
+                            <>
+                              Continue <ArrowRight size={12} />
+                            </>
+                          ) : (
+                            <>
+                              <Eye size={12} />
+                              View
+                            </>
+                          )}
                         </button>
                       </td>
                     </tr>

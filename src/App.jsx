@@ -1,9 +1,4 @@
-import {
-  createBrowserRouter,
-  RouterProvider,
-  Navigate,
-  Outlet,
-} from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate, Outlet} from "react-router-dom";
 import { useContext } from "react";
 import "./App.css";
 import { InstrumentRegister } from "./pages/InstrumentRegisteration";
@@ -15,10 +10,8 @@ import { LoginPage } from "./pages/Login";
 import { TestingPersonDashboard } from "./pages/TestingPersonDashbaord";
 import { TestingPersonReports } from "./pages/TestingPersonReports";
 import { AdminDashbaord } from "./pages/Admin/aadminDashboard";
-import { AdminReports } from "./pages/AdminReports";
 import { AdminReportsPage } from "./pages/Admin/AdminReportsPage";
 import AuditLog from "./pages/Admin/auditlog";
-import { ProjectStatus } from "./pages/ProjectStatus";
 import { CertificateVerification } from "./pages/CertificateVerification";
 import { ReportVerification } from "./pages/ReportVerification";
 import { Supervisordashbaord } from "./pages/SupervisorDashboard";
