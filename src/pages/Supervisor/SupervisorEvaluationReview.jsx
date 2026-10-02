@@ -14,6 +14,7 @@ export const SupervisorEvaluationReview = () => {
     [showCorrectionForm, setShowCorrectionForm] = useState(false),
     [correctionTestCodes, setCorrectionTestCodes] = useState(() => new Set()),
     [remarks, setRemarks] = useState(""),
+    [remarksError, setRemarksError] = useState(false),
     [selectedTest, setSelectedTest] = useState(null),
     [reviewedTests, setReviewedTests] = useState(() => new Set()),
     [reportGenerated, setReportGenerated] = useState(false),
@@ -30,12 +31,13 @@ export const SupervisorEvaluationReview = () => {
       .catch((e) => setError(e.message || "Unable to load review."));
   }, [applicationId, setHeaderContent]);
   const decide = async (d) => {
-    if (d === "REJECT" && correctionTestCodes.size === 0) {
-      setError("Select at least one test to return for correction.");
+    if (d === "REJECT" && !remarks.trim()) {
+      setRemarksError(true);
+      setError("Add a correction reason for the testing officer.");
       return;
     }
-    if (d === "REJECT" && !remarks.trim()) {
-      setError("Add a correction reason for the testing officer.");
+    if (d === "REJECT" && correctionTestCodes.size === 0) {
+      setError("Select at least one test to return for correction.");
       return;
     }
     setBusy(true);
@@ -170,7 +172,7 @@ export const SupervisorEvaluationReview = () => {
           </table>
         </div>
         {showCorrectionForm && <label className="mt-4 block text-xs font-semibold text-slate-700">Correction reason
-          <textarea value={remarks} onChange={(event) => setRemarks(event.target.value)} rows={3} maxLength={1000} placeholder="Explain what the testing officer needs to correct." className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-xs font-normal outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+          <textarea value={remarks} onChange={(event) => { setRemarks(event.target.value); if (event.target.value.trim()) { setRemarksError(false); setError(""); } }} rows={3} maxLength={1000} aria-invalid={remarksError} placeholder="Explain what the testing officer needs to correct." className={`mt-1 w-full rounded-md border px-3 py-2 text-xs font-normal outline-none focus:ring-2 ${remarksError ? "border-red-500 focus:border-red-500 focus:ring-red-100" : "border-slate-300 focus:border-blue-500 focus:ring-blue-100"}`} />
         </label>}
         {error && <p className="mt-3 text-xs text-red-600">{error}</p>}
         <div className="mt-5 flex justify-end gap-3">
@@ -178,19 +180,19 @@ export const SupervisorEvaluationReview = () => {
             type="button"
             disabled={busy}
             onClick={() => { setError(""); setCorrectionTestCodes(new Set()); setRemarks(""); setShowCorrectionForm(true); }}
-            className="rounded-md border border-red-200 bg-red-50 px-4 py-2 text-xs font-bold text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="cursor-pointer rounded-md border border-red-200 bg-red-50 px-4 py-2 text-xs font-bold text-red-700 disabled:cursor-pointer disabled:opacity-50"
           >
             Return for Correction
           </button> : <>
-            <button type="button" disabled={busy} onClick={() => { setShowCorrectionForm(false); setCorrectionTestCodes(new Set()); setRemarks(""); setError(""); }} className="rounded-md border border-slate-300 bg-white px-4 py-2 text-xs font-bold text-slate-700 disabled:opacity-50">Cancel</button>
-            <button type="button" disabled={busy || correctionTestCodes.size === 0 || !remarks.trim() || testedTests.length === 0} onClick={() => decide("REJECT")} className="rounded-md border border-red-200 bg-red-50 px-4 py-2 text-xs font-bold text-red-700 disabled:cursor-not-allowed disabled:opacity-50">Confirm Return</button>
+            <button type="button" disabled={busy} onClick={() => { setShowCorrectionForm(false); setCorrectionTestCodes(new Set()); setRemarks(""); setRemarksError(false); setError(""); }} className="cursor-pointer rounded-md border border-slate-300 bg-white px-4 py-2 text-xs font-bold text-slate-700 disabled:cursor-pointer disabled:opacity-50">Cancel</button>
+            <button type="button" disabled={busy || !allTestsReviewed || correctionTestCodes.size === 0 || testedTests.length === 0} onClick={() => decide("REJECT")} title={!allTestsReviewed ? "Review details for every test before returning" : "Return selected tests for correction"} className="cursor-pointer rounded-md border border-red-200 bg-red-50 px-4 py-2 text-xs font-bold text-red-700 disabled:cursor-pointer disabled:opacity-50">Confirm Return</button>
           </>}
           <button
             type="button"
             disabled={busy || !allTestsReviewed}
             onClick={() => decide("ACCEPT")}
             title={!allTestsReviewed ? "Review details for every test before accepting" : "Accept evaluation"}
-            className="rounded-md bg-emerald-600 px-4 py-2 text-xs font-bold text-white disabled:cursor-not-allowed disabled:bg-emerald-300"
+            className="cursor-pointer rounded-md bg-emerald-600 px-4 py-2 text-xs font-bold text-white disabled:cursor-pointer disabled:bg-emerald-300"
           >
             Approve Evaluation
           </button>
