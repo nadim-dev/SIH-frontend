@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { AlertTriangle, BadgeCheck, Building2, CalendarDays, CheckCircle2, FileCheck2, LoaderCircle, ShieldCheck } from "lucide-react";
+import { AlertTriangle, BadgeCheck, Building2, CalendarDays, CheckCircle2, FileCheck2, LoaderCircle, Mail, MapPin, Phone, ShieldCheck } from "lucide-react";
 import { verifyReportApi } from "../api/instrumentApi";
 
 const formatDate = (value) => value
@@ -53,6 +53,10 @@ export const ReportVerification = () => {
 
   const report = data.report || {};
   const instrument = report.instrument || {};
+  const laboratory = report.laboratoryDetails || {};
+  const laboratoryAddress = [laboratory.address, laboratory.city, laboratory.state, laboratory.pinCode]
+    .filter(Boolean)
+    .join(", ");
   const isValid = data.valid === true;
   const complianceStatus = String(report.complianceStatus || "").toUpperCase();
   const hasComplianceStatus = Boolean(complianceStatus);
@@ -102,11 +106,16 @@ export const ReportVerification = () => {
             ))}
           </div>
 
-          <div className="mt-4 flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3">
+          <div className="mt-4 flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3">
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-700"><Building2 size={18} /></span>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="m-0 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Issuing laboratory</p>
               <p className="m-0 mt-1 break-words text-sm font-bold text-slate-800">{report.laboratoryName || "Laboratory details unavailable"}</p>
+              <div className="mt-2 grid gap-1.5 text-xs leading-5 text-slate-600 sm:grid-cols-2">
+                <p className="m-0 flex items-start gap-1.5 sm:col-span-2"><MapPin size={14} className="mt-0.5 shrink-0 text-slate-400" />{laboratoryAddress || "Address unavailable"}</p>
+                <p className="m-0 flex items-center gap-1.5"><Phone size={13} className="shrink-0 text-slate-400" />{laboratory.contactNumber || "Phone unavailable"}</p>
+                <p className="m-0 flex min-w-0 items-center gap-1.5"><Mail size={13} className="shrink-0 text-slate-400" /><span className="break-all">{laboratory.officialEmail || "Email unavailable"}</span></p>
+              </div>
             </div>
           </div>
 
