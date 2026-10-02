@@ -537,7 +537,7 @@ const validationState = useMemo(() => {
                   {ocrLoading ? "Extracting details from nameplate..." : ocrFields ? "Nameplate details extracted. Review them below." : "Nameplate image ready. Details can be entered manually."}
                 </p>
                 {!ocrFields && (
-                  <button type="button" onClick={handleExtractNameplate} disabled={ocrLoading} className="rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 disabled:cursor-wait disabled:opacity-60">
+                  <button type="button" onClick={handleExtractNameplate} disabled={ocrLoading} className="cursor-pointer rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 disabled:cursor-wait disabled:opacity-60">
                     {ocrLoading ? "Extracting..." : "Extract details from photo"}
                   </button>
                 )}
@@ -584,6 +584,7 @@ const validationState = useMemo(() => {
               <button type="button" className="back-dashboard-button" onClick={() => navigate("/testing-person/dashboard")}>Back to Dashboard</button>
               <button
               type="submit"
+              className="cursor-pointer disabled:cursor-not-allowed"
               disabled={loading || !file || !validationState.isValid}
               style={{ opacity: loading || !file || !validationState.isValid ? 0.6 : 1 }}
             >
