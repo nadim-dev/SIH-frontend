@@ -185,7 +185,7 @@ export const SupervisorEvaluationReview = () => {
             Return for Correction
           </button> : <>
             <button type="button" disabled={busy} onClick={() => { setShowCorrectionForm(false); setCorrectionTestCodes(new Set()); setRemarks(""); setRemarksError(false); setError(""); }} className="cursor-pointer rounded-md border border-slate-300 bg-white px-4 py-2 text-xs font-bold text-slate-700 disabled:cursor-not-allowed disabled:opacity-50">Cancel</button>
-            <button type="button" disabled={busy || !allTestsReviewed || correctionTestCodes.size === 0 || testedTests.length === 0} onClick={() => decide("REJECT")} title={!allTestsReviewed ? "Review details for every test before returning" : "Return selected tests for correction"} className="cursor-pointer rounded-md border border-red-200 bg-red-50 px-4 py-2 text-xs font-bold text-red-700 disabled:cursor-not-allowed disabled:opacity-50">Confirm Return</button>
+            <button type="button" disabled={busy || correctionTestCodes.size === 0 || testedTests.length === 0} onClick={() => decide("REJECT")} title="Return selected tests for correction" className="cursor-pointer rounded-md border border-red-200 bg-red-50 px-4 py-2 text-xs font-bold text-red-700 disabled:cursor-not-allowed disabled:opacity-50">Confirm Return</button>
           </>}
           <button
             type="button"
