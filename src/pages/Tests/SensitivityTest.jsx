@@ -7,6 +7,12 @@ import NonComplianceReportModal from "../../components/NonComplianceReportModal"
 import EvidenceUpload from "../../components/EvidenceUpload";
 
 const asNumber = (value) => Number(value && typeof value === "object" ? value.$numberDecimal ?? value : value);
+const finalExample = (load, interval) => {
+  const loadText = String(load);
+  const intervalText = String(interval);
+  const decimalPlaces = Math.max(loadText.split(".")[1]?.length || 0, intervalText.split(".")[1]?.length || 0);
+  return (asNumber(load) + asNumber(interval)).toFixed(decimalPlaces);
+};
 
 export const SensitivityTest = () => {
   const { setHeaderContent } = useOutletContext();
@@ -48,10 +54,10 @@ export const SensitivityTest = () => {
     const hasReadings = row.initialIndication !== "" && row.finalIndication !== "" && Number.isFinite(initial) && Number.isFinite(final);
     const interval = asNumber(config.scaleInterval);
     const change = final - initial;
-    // OIML R 76-1 A.4.8.2 requires the indication after adding 1.4 d to be
-    // one actual scale interval above I. Allow half an interval around d to
-    // account for rounding/resolution in the manually entered observations.
-    const responseValid = hasReadings && interval > 0 && Math.abs(change - interval) <= interval / 2 + 1e-9;
+    const isScaleReading = (value) => interval > 0 && Math.abs(value / interval - Math.round(value / interval)) <= 1e-9;
+    // Digital indications must lie on actual d intervals, and the 1.4 d load
+    // must produce an increase of exactly one interval.
+    const responseValid = hasReadings && isScaleReading(initial) && isScaleReading(final) && Math.abs(change - interval) <= 1e-9;
     return { ...point, ...row, hasReadings, detected: Boolean(responseValid), passed: Boolean(responseValid) };
   }), [config, rows]);
 
@@ -108,9 +114,9 @@ export const SensitivityTest = () => {
                 <tr key={result.step} className="hover:bg-slate-50">
                   <td className="px-3 py-2.5 font-semibold text-slate-700">{result.step}</td>
                   <td className="px-3 py-2.5 font-medium">{result.load}</td>
-                  <td className="px-3 py-2"><input aria-label={`Test ${result.step} initial indication`} type="number" step="any" value={rows[index]?.initialIndication ?? ""} onChange={(event) => updateReading(index, "initialIndication", event.target.value)} className="!m-0 !h-9 !w-28 !rounded-md !border-slate-300 !px-2 !text-sm" /></td>
+                  <td className="px-3 py-2"><input aria-label={`Test ${result.step} initial indication`} type="number" step={config.scaleInterval} value={rows[index]?.initialIndication ?? ""} onChange={(event) => updateReading(index, "initialIndication", event.target.value)} className="!m-0 !h-9 !w-28 !rounded-md !border-slate-300 !px-2 !text-sm" /></td>
                   <td className="px-3 py-2.5">{result.additionalLoad}</td>
-                  <td className="px-3 py-2"><input aria-label={`Test ${result.step} final indication`} type="number" step="any" placeholder={["1.051", "75.07", "150.07"][index]} value={rows[index]?.finalIndication ?? ""} onChange={(event) => updateReading(index, "finalIndication", event.target.value)} className="!m-0 !h-9 !w-28 !rounded-md !border-slate-300 !px-2 !text-sm" /></td>
+                  <td className="px-3 py-2"><input aria-label={`Test ${result.step} final indication`} type="number" step={config.scaleInterval} placeholder={finalExample(result.load, config.scaleInterval)} value={rows[index]?.finalIndication ?? ""} onChange={(event) => updateReading(index, "finalIndication", event.target.value)} className="!m-0 !h-9 !w-28 !rounded-md !border-slate-300 !px-2 !text-sm" /></td>
                   <td className="px-3 py-2.5">{result.hasReadings ? result.detected ? <span className="inline-flex items-center gap-1 text-emerald-700"><Check size={15} />One interval detected</span> : <span className="inline-flex items-center gap-1 text-rose-700"><X size={15} />Incorrect change</span> : <span className="text-slate-400">Pending</span>}</td>
                   <td className="px-3 py-2.5"><span className={`rounded px-2 py-1 text-xs font-bold ${!result.hasReadings ? "bg-slate-100 text-slate-500" : result.passed ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>{!result.hasReadings ? "PENDING" : result.passed ? "PASS" : "FAIL"}</span></td>
                 </tr>
