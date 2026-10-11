@@ -131,7 +131,7 @@ The frontend and backend must agree on:
 2. The browser origin permitted by backend CORS.
 3. Credentialed request behavior and cookie attributes for the environment.
 
-See the [backend README](../backend/README.md#authentication-and-cors) for currently configured backend origins and session-cookie behavior.
+See the [backend README](https://github.com/nadim-dev/SIH-frontend/blob/backend/README.md) for currently configured backend origins and session-cookie behavior.
 
 ## Deployment
 
@@ -146,5 +146,5 @@ The frontend is currently configured to use the deployed Render API by default w
 
 ## Related documentation
 
-- [Backend README](../backend/README.md)
+- [Backend README](../https://github.com/nadim-dev/SIH-frontend/blob/backend/README.md)
 - [Frontend scripts and dependencies](package.json)
