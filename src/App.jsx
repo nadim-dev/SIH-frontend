@@ -46,7 +46,19 @@ function useAuth() {
 }
 
 function Loader() {
-  return <div className="p-6 text-slate-600">Loading...</div>;
+  return (
+    <main className="min-h-screen bg-slate-50 px-5 py-12 text-slate-800 sm:px-8">
+      <section className="mx-auto flex min-h-[70vh] max-w-xl flex-col items-center justify-center text-center">
+        <div className="mb-5 h-9 w-9 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600" aria-hidden="true" />
+        <h1 className="text-xl font-semibold tracking-tight">Connecting to NAWI Pro</h1>
+        <p className="mt-2 text-sm text-slate-600">Checking your session and preparing your workspace…</p>
+        <aside className="mt-7 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-left text-sm leading-6 text-amber-950">
+          <strong className="font-semibold">First visit may take 30–40 seconds.</strong>{" "}
+          The backend runs on Render’s free tier and may need time to wake up after a period of inactivity. Subsequent requests should load faster once it is awake.
+        </aside>
+      </section>
+    </main>
+  );
 }
 
 function ProtectedLayout() {
