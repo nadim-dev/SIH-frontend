@@ -56,7 +56,7 @@ cd frontend
 npm install
 ```
 
-Start the backend separately when developing against a local API. Follow the [backend setup guide](../backend/README.md) to configure its database, Redis, and environment.
+Start the backend separately when developing against a local API. Follow the [backend setup guide](https://github.com/nadim-dev/SIH_backend/blob/main/README.md) to configure its database, Redis, and environment.
 
 ## Configuration
 
@@ -146,5 +146,5 @@ The frontend is currently configured to use the deployed Render API by default w
 
 ## Related documentation
 
-- [Backend README](../https://github.com/nadim-dev/SIH-frontend/blob/backend/README.md)
+- [Backend README](https://github.com/nadim-dev/SIH_backend/blob/main/README.md)
 - [Frontend scripts and dependencies](package.json)
