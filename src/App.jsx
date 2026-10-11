@@ -77,22 +77,6 @@ function ProtectedLayout() {
   return <Outlet />;
 }
 
-// function RoleRedirect() {
-//   console.log("role direct layout function is running");
-//   const { currentUser, authLoading } = useAuth();
-//   console.log("currentUser",currentUser);
-
-//   if (authLoading){
-//     return <Loader />;
-//   }
-
-//   if (!currentUser) {
-//     return <Navigate to="/login" replace />;
-//   }
-
-//   return <Navigate to={getDashboardPath(currentUser.role)} replace />;
-// }
-
 function HomeRedirect() {
   const { currentUser, authLoading } = useAuth();
 
